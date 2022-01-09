@@ -32,7 +32,7 @@ def main():
         # model = MBartForConditionalGeneration.from_pretrained(model_name)
     ## load data
     data_dir = os.path.join(out_dir, f'data_{source_lang}')
-    train_data_file = os.path.join(data_dir, 'train_data')
+    train_data_file = os.path.join(out_dir, 'train_data')
     if(not os.exists(train_data_file)):
         dataset = load_dataset(dataset_name, cache_dir=out_dir, lang1='en', lang2=source_lang)
         # flip source/target lang in data
@@ -57,18 +57,20 @@ def main():
         train_dataset, train_val_data = train_dataset.select(list(range(N_train))), train_dataset.select(
             list(range(N_train, len(train_dataset))))
         test_data = train_test_data['test']
-        # save => load later as streaming
-        ## TODO: why does this crash RAM??
-        import torch
+        # save => load later
         train_dataset.save_to_disk(train_data_file)
         train_val_data.save_to_disk(os.path.join(data_dir, 'val_data'))
         test_data.save_to_disk(os.path.join(data_dir, 'test_data'))
+    else:
+        train_train_data = load_dataset(train_data_file)
+        train_val_data = load_dataset(os.path.join(data_dir, 'val_data'))
     ## load model
     if(model_type == 'mbart'):
-        model = MBartForConditionalGeneration.from_pretrained(model_name)
+        model = MBartForConditionalGeneration.from_pretrained(model_name, cache_dir=out_dir)
         device_id = 0
         device = f'cuda:{device_id}'
         model.to(device)
+
 
 if __name__ == '__main__':
     main()
