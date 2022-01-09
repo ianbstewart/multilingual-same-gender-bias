@@ -38,6 +38,7 @@ def generate_occupation_relationship_sentence_data(relationship_sents, occupatio
         article_pronoun_lookup_i = lang_art_PRON_lookup[lang_i]
         poss_pronoun_lookup_i = lang_POSS_PRON_lookup[lang_i]
         sents_i = relationship_sents.loc[:, f'{lang_i}_sentence'].values
+        sent_topics_i = relationship_sents.loc[:, 'topic'].values
         # limit to occupation words that have different forms for female/male
         if(lang_i not in OCCUPATION_NON_GENDER_LANGS):
             occupation_words_i = occupation_words[occupation_words.loc[:, f'{lang_i}_female']!=occupation_words.loc[:, f'{lang_i}_male']]
@@ -54,16 +55,16 @@ def generate_occupation_relationship_sentence_data(relationship_sents, occupatio
             male_subject_occupation_relationship_combos_i = [(x[0], x[1], 'female') for x in list(product(male_occupation_words_i, female_relationship_words_i))]
             female_subject_occupation_relationship_combos_i = [(x[0], x[1], 'male') for x in list(product(female_occupation_words_i, male_relationship_words_i))]
 
-        for sent_j in sents_i:
+        for sent_j, sent_topic_j in zip(sents_i, sent_topics_i):
             subject_word_gender_i = 'male'
             for subject_word_k, relationship_word_k, relationship_gender_k in male_subject_occupation_relationship_combos_i:
                 final_sent_j = build_relationship_target_sentence(lang_i, subject_word_k, sent_j, article_pronoun_lookup_i, poss_pronoun_lookup_i, relationship_gender_k, relationship_word_k, subject_word_gender=subject_word_gender_i)
-                data.append([final_sent_j, lang_i, subject_word_k, relationship_word_k, subject_word_gender_i])
+                data.append([final_sent_j, lang_i, subject_word_k, relationship_word_k, subject_word_gender_i, sent_topic_j])
             subject_word_gender_i = 'female'
             for subject_word_k, relationship_word_k, relationship_gender_k in female_subject_occupation_relationship_combos_i:
                 final_sent_j = build_relationship_target_sentence(lang_i, subject_word_k, sent_j, article_pronoun_lookup_i, poss_pronoun_lookup_i, relationship_gender_k, relationship_word_k, subject_word_gender=subject_word_gender_i)
-                data.append([final_sent_j, lang_i, subject_word_k, relationship_word_k, subject_word_gender_i])
-    data = pd.DataFrame(data, columns=['sent', 'lang', 'subject_word', 'relationship_word', 'subject_gender'])
+                data.append([final_sent_j, lang_i, subject_word_k, relationship_word_k, subject_word_gender_i, sent_topic_j])
+    data = pd.DataFrame(data, columns=['sent', 'lang', 'subject_word', 'relationship_word', 'subject_gender', 'relationship_topic'])
     other_gender_lookup = {'male' : 'female', 'female' : 'male'}
     if(relationship_type=='same_gender'):
         data = data.assign(**{'relationship_gender' : data.loc[:, 'subject_gender'].values})
@@ -160,3 +161,36 @@ def translate_subject_relationship_words(data, occupation_words, relationship_wo
         'relationship_word_en' : data.apply(lambda x: word_other_en_lookup[x.loc['lang']][x.loc['relationship_word']], axis=1),
     })
     return data
+
+def load_clean_translation_data(data_file):
+    data = pd.read_csv(data_file, compression='gzip', sep='\t')
+    # remove accidental EN translations
+    if('en' in data.loc[:, 'lang'].unique()):
+        data = data[data.loc[:, 'lang']!='en']
+    # reassign gender to subject/relationships
+    occupation_words, relationship_words, relationship_sents, langs, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
+    # remove accidental EN translations
+    langs = list(filter(lambda x: x!='en', langs))
+    data = extract_subject_relationship_gender(data, relationship_words)
+    data = translate_subject_relationship_words(data, occupation_words, relationship_words)
+    data = data.assign(**{
+        'subject_gender_match': (data.loc[:, 'subject_gender'] == data.loc[:, 'translation_subject_gender']).astype(int),
+        'relationship_gender_match': (data.loc[:, 'subject_gender'] == data.loc[:, 'translation_relationship_gender']).astype(int),
+    })
+    valid_data = data.dropna(subset=['translation_subject_gender', 'translation_relationship_gender'], how='all')
+    valid_data = valid_data.assign(**{
+        'subject_relationship_gender_match': valid_data.loc[:, ['relationship_gender_match', 'subject_gender_match']].min(axis=1)
+    })
+    # fix relationship category names
+    relationship_target_categories = {
+        'FRIEND': ['boyfriend', 'girlfriend'],
+        'ENGAGE': ['fiance', 'fiancee'],
+        'SPOUSE': ['husband', 'wife'],
+    }
+    relationship_target_categories = {
+        v1: k for k, v in relationship_target_categories.items() for v1 in v
+    }
+    valid_data = valid_data.assign(**{
+        'relationship_word_category': valid_data.loc[:, 'relationship_word_en'].apply(relationship_target_categories.get)
+    })
+    return valid_data
