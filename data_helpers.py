@@ -2,6 +2,8 @@ import pandas as pd
 from itertools import combinations, product
 from unidecode import unidecode
 import re
+import numpy as np
+from ast import literal_eval
 
 VOWEL_MATCHER = re.compile('^[aeiou].+')
 def build_relationship_target_sentence(lang, subject_word, sentence, article_pronoun_lookup, poss_pronoun_lookup, relationship_word_gender, relationship_word, subject_word_gender=None):
@@ -162,6 +164,42 @@ def translate_subject_relationship_words(data, occupation_words, relationship_wo
     })
     return data
 
+def load_clean_relationship_sent_data(langs=['es', 'fr', 'it', 'en']):
+    occupation_words, relationship_words, relationship_sents, langs, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
+    same_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents, 
+                                                                                        occupation_words, 
+                                                                                        relationship_words,
+                                                                                        lang_art_PRON_lookup, 
+                                                                                        lang_POSS_PRON_lookup,
+                                                                                        relationship_type='same_gender', 
+                                                                                        langs=langs)
+    diff_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents, 
+                                                                                        occupation_words, 
+                                                                                        relationship_words,
+                                                                                        lang_art_PRON_lookup, 
+                                                                                        lang_POSS_PRON_lookup,
+                                                                                        relationship_type='diff_gender', 
+                                                                                        langs=langs)
+    relationship_sent_data = pd.concat([
+        same_gender_relationship_sent_data.assign(**{'relationship_type' : 'same_gender'}),
+        diff_gender_relationship_sent_data.assign(**{'relationship_type' : 'diff_gender'}),
+    ], axis=0)
+    ## add EN translations + relationship-target categories
+    relationship_sent_data = translate_subject_relationship_words(relationship_sent_data, occupation_words, relationship_words, langs=langs)
+    # add relationship target categories
+    relationship_target_categories = {
+    'FRIEND' : ['boyfriend', 'girlfriend'],
+    'ENGAGE' : ['fiance', 'fiancee'],
+    'SPOUSE' : ['husband', 'wife'],
+    }
+    relationship_target_categories = {
+        v1 : k for k, v in relationship_target_categories.items() for v1 in v
+    }
+    relationship_sent_data = relationship_sent_data.assign(**{
+        'relationship_word_category' : relationship_sent_data.loc[:, 'relationship_word_en'].apply(relationship_target_categories.get)
+    })
+    return relationship_sent_data
+
 def load_clean_translation_data(data_file):
     data = pd.read_csv(data_file, compression='gzip', sep='\t')
     # remove accidental EN translations
@@ -194,3 +232,16 @@ def load_clean_translation_data(data_file):
         'relationship_word_category': valid_data.loc[:, 'relationship_word_en'].apply(relationship_target_categories.get)
     })
     return valid_data
+
+def str2array(s):
+    """
+    Convert string to numpy array.
+
+    :param s:
+    :return:
+    """
+    # Remove space after [
+    s=re.sub('\[ +', '[', s.strip())
+    # Replace commas and spaces
+    s=re.sub('[,\s]+', ', ', s)
+    return np.array(literal_eval(s))
