@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=train_question_model
+#SBATCH --job-name=train_MT_model
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --output=/home/%u/logs/%x-%j.log
 #SBATCH --nodes=1
@@ -12,7 +12,10 @@
 #SBATCH --account=mihalcea0
 OUT_DIR=data/MT
 SOURCE_LANG=es
-DATASET='europarl-bilingual'
+DATASET='europarl_bilingual'
 MODEL_TYPE='mbart'
 
+# disable internet
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=1
 python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE
