@@ -128,7 +128,7 @@ def main():
     max_steps = 3
     ## TODO: retrain w/ more epochs?? performance is basically noise
     training_args = Seq2SeqTrainingArguments(
-        'finetune_translate_mbart',
+        f'finetune_translate_mbart_lang={source_lang}',
         evaluation_strategy='epoch',
         learning_rate=2e-5,
         per_device_train_batch_size=batch_size,
