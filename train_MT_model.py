@@ -124,9 +124,10 @@ def main():
 
     ## set up trainer
     from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
-    batch_size = 16
+    batch_size = 4
     num_train_epochs = 3
-    ## TODO: retrain w/ more epochs?? performance is basically noise
+    ## TODO: retrain w/ more epochs?? performance is basically noise when using multiple langs
+    ## TODO: allow re-training in case of timeout, e.g. load model and trainer from latest checkpoint
     training_args = Seq2SeqTrainingArguments(
         f'finetune_translate_mbart_lang={source_lang}',
         evaluation_strategy='epoch',
