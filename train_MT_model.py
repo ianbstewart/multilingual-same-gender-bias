@@ -3,7 +3,7 @@ Train MT model on predefined corpora.
 """
 import os
 from argparse import ArgumentParser
-from datasets import load_dataset, load_metric
+from datasets import load_dataset, load_metric, load_from_disk
 from transformers import MBartTokenizer, MBartForConditionalGeneration, Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
 import numpy as np
 
@@ -113,8 +113,8 @@ def main():
         train_val_data.save_to_disk(os.path.join(data_dir, 'val_data'))
         test_data.save_to_disk(os.path.join(data_dir, 'test_data'))
     else:
-        train_train_data = load_dataset(train_data_file)
-        train_val_data = load_dataset(os.path.join(data_dir, 'val_data'))
+        train_train_data = load_from_disk(train_data_file)
+        train_val_data = load_from_disk(os.path.join(data_dir, 'val_data'))
     ## load model
     if(model_type == 'mbart'):
         model = MBartForConditionalGeneration.from_pretrained(model_name, cache_dir=out_dir)
@@ -125,7 +125,7 @@ def main():
     ## set up trainer
     from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
     batch_size = 16
-    max_steps = 3
+    num_train_epochs = 3
     ## TODO: retrain w/ more epochs?? performance is basically noise
     training_args = Seq2SeqTrainingArguments(
         f'finetune_translate_mbart_lang={source_lang}',
@@ -135,7 +135,7 @@ def main():
         per_device_eval_batch_size=batch_size,
         weight_decay=0.01,
         save_total_limit=1,
-        num_train_epochs=3,
+        num_train_epochs=num_train_epochs,
         predict_with_generate=True,
     )
     data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
