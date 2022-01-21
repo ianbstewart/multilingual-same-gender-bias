@@ -134,7 +134,7 @@ def main():
     ## TODO: allow re-training in case of timeout, e.g. load model and trainer from latest checkpoint
 
     training_out_dir = f'finetune_translate_mbart_lang={source_lang}'
-    training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir()))
+    training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir(training_out_dir)))
     if(len(training_checkpoints) > 0):
         training_args = Seq2SeqTrainingArguments(
             training_out_dir,
@@ -162,7 +162,6 @@ def main():
     most_recent_checkpoint = os.path.join(training_out_dir, training_checkpoints[0])
     trained_model = MBartForConditionalGeneration.from_pretrained(most_recent_checkpoint)
     ## evaluate!
-    ## TODO: test
     test_data = load_from_disk(os.path.join(data_dir, 'test_data'))
     test_cols = ['input_ids', 'attention_mask', 'labels']
     test_data.set_format(columns=test_cols, type='torch')
@@ -181,6 +180,7 @@ def main():
         })
         test_output_file = os.path.join(training_out_dir, f'test_data_output.gz')
         test_output_data.to_csv(test_output_file, sep='\t', compression='gzip', index=False)
+    ## TODO: BLEU, ROUGE, METEOR
 
 if __name__ == '__main__':
     main()
