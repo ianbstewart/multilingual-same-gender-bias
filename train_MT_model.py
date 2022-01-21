@@ -1,11 +1,15 @@
 """
 Train MT model on predefined corpora.
 """
+import gzip
 import os
 from argparse import ArgumentParser
+
+import pandas as pd
+import torch
 from datasets import load_dataset, load_metric, load_from_disk
 from transformers import MBartTokenizer, MBartForConditionalGeneration, Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
-import numpy as np
+from tqdm import tqdm
 
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]
@@ -128,31 +132,55 @@ def main():
     num_train_epochs = 3
     ## TODO: retrain w/ more epochs?? performance is basically noise when using multiple langs
     ## TODO: allow re-training in case of timeout, e.g. load model and trainer from latest checkpoint
-    training_args = Seq2SeqTrainingArguments(
-        f'finetune_translate_mbart_lang={source_lang}',
-        evaluation_strategy='epoch',
-        learning_rate=2e-5,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
-        weight_decay=0.01,
-        save_total_limit=1,
-        num_train_epochs=num_train_epochs,
-        predict_with_generate=True,
-    )
-    data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
-    trainer = Seq2SeqTrainer(
-        model,
-        training_args,
-        train_dataset=train_train_data,
-        eval_dataset=train_val_data,
-        data_collator=data_collator,
-        tokenizer=tokenizer,
-        compute_metrics=lambda x: compute_metrics(x, tokenizer),
-    )
-    ## train!!
-    trainer.train()
+
+    training_out_dir = f'finetune_translate_mbart_lang={source_lang}'
+    training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir()))
+    if(len(training_checkpoints) > 0):
+        training_args = Seq2SeqTrainingArguments(
+            training_out_dir,
+            evaluation_strategy='epoch',
+            learning_rate=2e-5,
+            per_device_train_batch_size=batch_size,
+            per_device_eval_batch_size=batch_size,
+            weight_decay=0.01,
+            save_total_limit=1,
+            num_train_epochs=num_train_epochs,
+            predict_with_generate=True,
+        )
+        data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+        trainer = Seq2SeqTrainer(
+            model,
+            training_args,
+            train_dataset=train_train_data,
+            eval_dataset=train_val_data,
+            data_collator=data_collator,
+            tokenizer=tokenizer,
+            compute_metrics=lambda x: compute_metrics(x, tokenizer),
+        )
+        ## train!!
+        trainer.train()
+    most_recent_checkpoint = os.path.join(training_out_dir, training_checkpoints[0])
+    trained_model = MBartForConditionalGeneration.from_pretrained(most_recent_checkpoint)
     ## evaluate!
     ## TODO: test
+    test_data = load_from_disk(os.path.join(data_dir, 'test_data'))
+    test_cols = ['input_ids', 'attention_mask', 'labels']
+    test_data.set_format(columns=test_cols, type='torch')
+    with torch.no_grad():
+        device_id = 0
+        device = f'cuda:{device_id}'
+        model.to(device)
+        ## TODO: generate w/ constraints e.g. no repetition
+        test_output = [trained_model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}) for x in tqdm(test_data)]
+        # write output
+        test_output = tokenizer.batch_decode(test_output)
+        test_output_data = pd.DataFrame(test_output, columns=['pred_output'])
+        test_output_data = test_output_data.assign(**{
+            'input' : tokenizer.batch_decode(test_data['input_ids']),
+            'output' : tokenizer.batch_decode(test_data['labels'])
+        })
+        test_output_file = os.path.join(training_out_dir, f'test_data_output.gz')
+        test_output_data.to_csv(test_output_file, sep='\t', compression='gzip', index=False)
 
 if __name__ == '__main__':
     main()
