@@ -135,7 +135,7 @@ def main():
 
     training_out_dir = f'finetune_translate_mbart_lang={source_lang}'
     training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir(training_out_dir)))
-    if(len(training_checkpoints) > 0):
+    if(len(training_checkpoints) == 0):
         training_args = Seq2SeqTrainingArguments(
             training_out_dir,
             evaluation_strategy='epoch',
