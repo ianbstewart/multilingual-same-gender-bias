@@ -26,6 +26,8 @@ def main():
     model = MBartForConditionalGeneration.from_pretrained(model_dir)
     tokenizer = MBartTokenizer.from_pretrained(model_dir)
     test_data = load_from_disk(test_data_dir)
+    # fix column types
+    test_data.set_format('torch', ['input_ids', 'attention_mask', 'labels'])
     model.eval()
     device = f'cuda:{device_id}'
     model.to(device)
