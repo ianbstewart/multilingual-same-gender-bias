@@ -38,7 +38,7 @@ def main():
     # generate
     test_cols = ['input_ids', 'attention_mask']
     with torch.no_grad():
-        test_pred_output = [model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}, top_p=0.9, no_repeat_ngram_size=3) for x in tqdm(test_data)]
+        test_pred_output = [model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}, top_p=0.9, no_repeat_ngram_size=3)[0] for x in tqdm(test_data)]
     # convert to str
     test_pred_output_str = tokenizer.batch_decode(test_pred_output, skip_special_tokens=True)
     # write to file
