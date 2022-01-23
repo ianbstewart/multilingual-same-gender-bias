@@ -40,7 +40,7 @@ def main():
     with torch.no_grad():
         test_pred_output = [model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}, top_p=0.9, no_repeat_ngram_size=3)[0] for x in tqdm(test_data)]
     # convert to str
-    test_pred_output_str = tokenizer.batch_decode(test_pred_output, skip_special_tokens=True)
+    test_pred_output_str = [tokenizer.decode(x, skip_special_tokens=True) for x in test_pred_output]
     # write to file
     test_file = os.path.join(out_dir, 'test_data_output.gz')
     test_input = tokenizer.batch_decode(test_data['input_ids'], skip_special_tokens=True)
