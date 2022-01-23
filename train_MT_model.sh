@@ -11,11 +11,14 @@
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
 OUT_DIR=data/MT
-SOURCE_LANG=es
+#SOURCE_LANG=es
+SOURCE_LANG=fr
+#SOURCE_LANG=it
 DATASET='europarl_bilingual'
 MODEL_TYPE='mbart'
+SAMPLE_SIZE=100000
 
 # disable internet
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
-python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE
+python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE --sample_size $SAMPLE_SIZE

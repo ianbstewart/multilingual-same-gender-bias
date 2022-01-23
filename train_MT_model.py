@@ -66,11 +66,13 @@ def main():
     parser.add_argument('--source_lang', default='es') # es, fr, it
     parser.add_argument('--dataset', default='europarl_bilingual')
     parser.add_argument('--model_type', default='mbart') # mbart,
+    parser.add_argument('--sample_size', type=int, default=None)
     args = vars(parser.parse_args())
     out_dir = args['out_dir']
     dataset_name = args['dataset']
     source_lang = args['source_lang']
     model_type = args['model_type']
+    sample_size = args['sample_size']
 
     # load tokenizer
     lang_token_lookup = {
@@ -90,6 +92,8 @@ def main():
     if(not os.path.exists(train_data_file)):
         dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
         dataset = dataset['train']
+        if(sample_size is not None):
+            dataset = dataset.select(list(range(sample_size)))
         # flip source/target lang in data
         src_data = [x[source_lang] for x in dataset['translation']]
         tgt_data = [x['en'] for x in dataset['translation']]
@@ -162,25 +166,25 @@ def main():
     most_recent_checkpoint = os.path.join(training_out_dir, training_checkpoints[0])
     trained_model = MBartForConditionalGeneration.from_pretrained(most_recent_checkpoint)
     ## evaluate!
-    test_data = load_from_disk(os.path.join(data_dir, 'test_data'))
-    test_cols = ['input_ids', 'attention_mask', 'labels']
-    test_data.set_format(columns=test_cols, type='torch')
-    with torch.no_grad():
-        device_id = 0
-        device = f'cuda:{device_id}'
-        model.to(device)
-        ## TODO: generate w/ constraints e.g. no repetition
-        test_output = [trained_model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}) for x in tqdm(test_data)]
-        # write output
-        test_output = tokenizer.batch_decode(test_output)
-        test_output_data = pd.DataFrame(test_output, columns=['pred_output'])
-        test_output_data = test_output_data.assign(**{
-            'input' : tokenizer.batch_decode(test_data['input_ids']),
-            'output' : tokenizer.batch_decode(test_data['labels'])
-        })
-        test_output_file = os.path.join(training_out_dir, f'test_data_output.gz')
-        test_output_data.to_csv(test_output_file, sep='\t', compression='gzip', index=False)
-    ## TODO: BLEU, ROUGE, METEOR
+    # test_data = load_from_disk(os.path.join(data_dir, 'test_data'))
+    # test_cols = ['input_ids', 'attention_mask', 'labels']
+    # test_data.set_format(columns=test_cols, type='torch')
+    # with torch.no_grad():
+    #     device_id = 0
+    #     device = f'cuda:{device_id}'
+    #     model.to(device)
+    #     ## TODO: generate w/ constraints e.g. no repetition
+    #     test_output = [trained_model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}) for x in tqdm(test_data)]
+    #     # write output
+    #     test_output = tokenizer.batch_decode(test_output)
+    #     test_output_data = pd.DataFrame(test_output, columns=['pred_output'])
+    #     test_output_data = test_output_data.assign(**{
+    #         'input' : tokenizer.batch_decode(test_data['input_ids']),
+    #         'output' : tokenizer.batch_decode(test_data['labels'])
+    #     })
+    #     test_output_file = os.path.join(training_out_dir, f'test_data_output.gz')
+    #     test_output_data.to_csv(test_output_file, sep='\t', compression='gzip', index=False)
+    # ## TODO: BLEU, ROUGE, METEOR
 
 if __name__ == '__main__':
     main()
