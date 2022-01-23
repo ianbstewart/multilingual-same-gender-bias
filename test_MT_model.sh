@@ -11,8 +11,8 @@
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
 LANG=es
-MODEL_DIR=finetune_translate_mbart_lang="$LANG"
-OUT_DIR=data/MT/lang_"$LANG"
+MODEL_DIR=finetune_translate_mbart_lang="$LANG"/checkpoint-52500/
+OUT_DIR=data/MT/data_"$LANG"
 TEST_DATA_DIR="$OUT_DIR"/test_data
 # offline transformers on server
 export TRANSFORMERS_OFFLINE=1
