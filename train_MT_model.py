@@ -86,7 +86,7 @@ def main():
         # model = MBartForConditionalGeneration.from_pretrained(model_name)
     ## load data
     data_dir = os.path.join(out_dir, f'data_{source_lang}')
-    train_data_file = os.path.join(out_dir, 'train_data')
+    train_data_file = os.path.join(data_dir, 'train_data')
     if(not os.path.exists(train_data_file)):
         dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
         dataset = dataset['train']

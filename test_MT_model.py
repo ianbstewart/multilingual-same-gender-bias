@@ -28,6 +28,9 @@ def main():
     test_data = load_from_disk(test_data_dir)
     # fix column types
     test_data.set_format('torch', ['input_ids', 'attention_mask', 'labels'])
+    # tmp debugging
+    sample_size = 100
+    test_data.select(list(range(sample_size)))
     model.eval()
     device = f'cuda:{device_id}'
     model.to(device)
@@ -35,7 +38,7 @@ def main():
     # generate
     test_cols = ['input_ids', 'attention_mask']
     with torch.no_grad():
-        test_pred_output = [model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}) for x in tqdm(test_data)]
+        test_pred_output = [model.generate(**{c: x[c].to(device).unsqueeze(0) for c in test_cols}, top_p=0.9, no_repeat_ngram_size=3) for x in tqdm(test_data)]
     # write to file
     test_file = os.path.join(out_dir, 'test_data_output.gz')
     test_input = tokenizer.batch_decode(test_data['input_ids'], skip_special_tokens=True)
