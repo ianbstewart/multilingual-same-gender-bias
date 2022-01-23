@@ -93,7 +93,7 @@ def main():
         dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
         dataset = dataset['train']
         if(sample_size is not None):
-            dataset = dataset.select(list(range(sample_size)))
+            dataset = dataset.shuffle(seed=123, keep_in_memory=True).select(list(range(sample_size)), keep_in_memory=True)
         # flip source/target lang in data
         src_data = [x[source_lang] for x in dataset['translation']]
         tgt_data = [x['en'] for x in dataset['translation']]
