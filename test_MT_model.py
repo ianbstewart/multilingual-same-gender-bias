@@ -30,7 +30,7 @@ def main():
     test_data.set_format('torch', ['input_ids', 'attention_mask', 'labels'])
     # tmp debugging
     sample_size = 100
-    test_data.select(list(range(sample_size)))
+    test_data= test_data.select(list(range(sample_size)))
     model.eval()
     device = f'cuda:{device_id}'
     model.to(device)
