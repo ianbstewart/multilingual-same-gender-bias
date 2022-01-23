@@ -10,7 +10,7 @@ from transformers import MBartTokenizer, MBartForConditionalGeneration
 from datasets import load_from_disk
 from tqdm import tqdm
 
-def __main__():
+def main():
     parser = ArgumentParser()
     parser.add_argument('model_dir')
     parser.add_argument('out_dir')
