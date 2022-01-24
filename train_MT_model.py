@@ -141,6 +141,8 @@ def main():
     ## TODO: allow re-training in case of timeout, e.g. load model and trainer from latest checkpoint
 
     training_out_dir = f'finetune_translate_mbart_lang={source_lang}'
+    if(not os.path.exists(training_out_dir)):
+        os.mkdir(training_out_dir)
     training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir(training_out_dir)))
     if(len(training_checkpoints) == 0):
         training_args = Seq2SeqTrainingArguments(
