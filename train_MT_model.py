@@ -98,16 +98,17 @@ def main():
         src_data = [x[source_lang] for x in dataset['translation']]
         tgt_data = [x['en'] for x in dataset['translation']]
         dataset.remove_columns('translation')
+        ## TODO: error w/ val data?
         # if(sample_size is not None):
         #     src_data = src_data[:sample_size]
         #     tgt_data = tgt_data[:sample_size]
         # tokenize text etc
         en_token = 'en_XX'
         max_length = 128
-        src_txt = [en_token + ' ' + x for x in src_data]
-        src_token = [tokenizer(x, max_length=max_length) for x in src_txt]
+        # src_txt = [en_token + ' ' + x for x in src_data]
+        src_token = [tokenizer(x, max_length=max_length) for x in src_data]
         tgt_token = [tokenizer(x, max_length=max_length) for x in tgt_data]
-        tgt_token = [{'input_ids': x['input_ids'][1:]} for x in tgt_token]
+        # tgt_token = [{'input_ids': x['input_ids'][1:]} for x in tgt_token]
         dataset = dataset.add_column('input_ids', [x['input_ids'] for x in src_token])
         dataset = dataset.add_column('attention_mask', [x['attention_mask'] for x in src_token])
         dataset = dataset.add_column('labels', [x['input_ids'] for x in tgt_token])
@@ -116,8 +117,8 @@ def main():
         train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
         train_dataset = train_test_data['train']
         N_train = int(len(train_dataset) * 0.8)
-        train_train_data, train_val_data = train_dataset.select(list(range(N_train))), train_dataset.select(
-            list(range(N_train, len(train_dataset))))
+        train_train_data = train_dataset.select(list(range(N_train))).flatten_indices()
+        train_val_data = train_dataset.select(list(range(N_train, len(train_dataset)))).flatten_indices()
         test_data = train_test_data['test']
         # save => load later
         train_train_data.save_to_disk(train_data_file)
