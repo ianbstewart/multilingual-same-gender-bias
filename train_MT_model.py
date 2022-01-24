@@ -98,6 +98,9 @@ def main():
         src_data = [x[source_lang] for x in dataset['translation']]
         tgt_data = [x['en'] for x in dataset['translation']]
         dataset.remove_columns('translation')
+        if(sample_size is not None):
+            src_data = src_data[:sample_size]
+            tgt_data = tgt_data[:sample_size]
         # tokenize text etc
         en_token = 'en_XX'
         max_length = 128
