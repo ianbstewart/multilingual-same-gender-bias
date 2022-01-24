@@ -93,14 +93,14 @@ def main():
         dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
         dataset = dataset['train']
         if(sample_size is not None):
-            dataset = dataset.shuffle(seed=123).select(list(range(sample_size))) 
+            dataset = dataset.shuffle(seed=123).select(list(range(sample_size))).flatten_indices()
         # flip source/target lang in data
         src_data = [x[source_lang] for x in dataset['translation']]
         tgt_data = [x['en'] for x in dataset['translation']]
         dataset.remove_columns('translation')
-        if(sample_size is not None):
-            src_data = src_data[:sample_size]
-            tgt_data = tgt_data[:sample_size]
+        # if(sample_size is not None):
+        #     src_data = src_data[:sample_size]
+        #     tgt_data = tgt_data[:sample_size]
         # tokenize text etc
         en_token = 'en_XX'
         max_length = 128
