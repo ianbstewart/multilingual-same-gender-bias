@@ -232,6 +232,7 @@ def load_clean_translation_data(data_file):
         'relationship_word_category': valid_data.loc[:, 'relationship_word_en'].apply(relationship_target_categories.get)
     })
     return valid_data
+
 def str2array(s):
     """
     Convert string to numpy array.
