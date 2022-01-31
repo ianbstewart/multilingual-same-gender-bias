@@ -40,8 +40,8 @@ def main():
         ## TODO: join English translations
         en_sentence_data = load_clean_relationship_sent_data(langs=['en'])
         en_sentence_data = en_sentence_data.rename(columns={'sent' : 'sent_en'})
-        relationship_id_cols = ['subject_word_en', 'relationship_word_en', 'relationship_topic']
-        sentence_data = pd.merge(sentence_data, en_sentence_data.loc[:, ['sent_en']+relationship_id_cols], on=relationship_id_cols)
+        data_id_cols = ['subject_word_en', 'relationship_word_en', 'relationship_topic', 'relationship_type']
+        sentence_data = pd.merge(sentence_data, en_sentence_data.loc[:, ['sent_en']+data_id_cols], on=data_id_cols)
 
     # save separate file for each language
     # for lang_i, data_i in sentence_data.groupby('lang'):
@@ -67,6 +67,8 @@ def main():
         dataset_i = Dataset.from_dict(dataset_i)
         output_data_i = tokenizer_i(data_i.loc[:, 'sent_en'].values.tolist(), max_length=max_length)
         dataset_i = dataset_i.add_column('labels', list(map(lambda x: x[:-1], output_data_i['input_ids'])))
+        for id_col_j in data_id_cols:
+            dataset_i = dataset_i.add_column(id_col_j, data_i.loc[:, id_col_j].values)
         ## TODO: train/val/test split
         # test_pct = 0.1
         # train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
