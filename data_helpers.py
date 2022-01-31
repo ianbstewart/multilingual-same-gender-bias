@@ -165,7 +165,7 @@ def translate_subject_relationship_words(data, occupation_words, relationship_wo
     return data
 
 def load_clean_relationship_sent_data(langs=['es', 'fr', 'it', 'en']):
-    occupation_words, relationship_words, relationship_sents, langs, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
+    occupation_words, relationship_words, relationship_sents, _, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
     same_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents, 
                                                                                         occupation_words, 
                                                                                         relationship_words,
