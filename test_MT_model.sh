@@ -10,8 +10,10 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
-LANG=es
-MODEL_DIR=finetune_translate_mbart_lang="$LANG"/checkpoint-52500/
+#LANG=es
+#LANG=fr
+LANG=it
+MODEL_DIR=finetune_translate_mbart_lang="$LANG"/checkpoint-54000/
 OUT_DIR=data/MT/data_"$LANG"
 TEST_DATA_DIR="$OUT_DIR"/test_data
 # offline transformers on server

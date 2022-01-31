@@ -11,8 +11,8 @@
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
 OUT_DIR=data/MT
-#SOURCE_LANG=es
-SOURCE_LANG=fr
+SOURCE_LANG=es
+#SOURCE_LANG=fr
 #SOURCE_LANG=it
 DATASET='europarl_bilingual'
 MODEL_TYPE='mbart'
