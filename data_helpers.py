@@ -29,6 +29,8 @@ def build_relationship_target_sentence(lang, subject_word, sentence, article_pro
     ]
     for x, y in replacement_pairs:
         sentence = sentence.replace(x,y)
+    # fix spacing
+    sentence = re.sub('\s{2,}', ' ', sentence).strip()
     return sentence
 
 OCCUPATION_NON_GENDER_LANGS={'en'}
@@ -165,7 +167,7 @@ def translate_subject_relationship_words(data, occupation_words, relationship_wo
     return data
 
 def load_clean_relationship_sent_data(langs=['es', 'fr', 'it', 'en']):
-    occupation_words, relationship_words, relationship_sents, langs, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
+    occupation_words, relationship_words, relationship_sents, _, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
     same_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents, 
                                                                                         occupation_words, 
                                                                                         relationship_words,
@@ -245,3 +247,20 @@ def str2array(s):
     # Replace commas and spaces
     s=re.sub('[,\s]+', ', ', s)
     return np.array(literal_eval(s))
+
+def match_category(text_tokens, matchers):
+    """
+    Determine if at least one token in text
+    matches specified category.
+
+    :param text_tokens:
+    :param matchers: (category_name, regex matcher)
+    :return:
+    """
+    category = None
+    for cat_i, match_i in matchers:
+        token_matches = list(filter(lambda x: match_i.match(x) is not None, text_tokens))
+        if(len(token_matches) > 0):
+            category = cat_i
+            break
+    return category
