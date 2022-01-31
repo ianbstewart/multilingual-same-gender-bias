@@ -42,8 +42,9 @@ def main():
         en_sentence_data = en_sentence_data.rename(columns={'sent' : 'sent_en'})
         data_id_cols = ['subject_word_en', 'subject_gender', 'relationship_word_en', 'relationship_topic', 'relationship_type']
         sentence_data = pd.merge(sentence_data, en_sentence_data.loc[:, ['sent_en']+data_id_cols], on=data_id_cols)
-        # tmp debugging
-        sentence_data.to_csv('tmp.gz', sep='\t', compression='gzip', index=False)
+        # save for later analysis
+        sentence_out_file = os.path.join(out_dir, f'translation_data_type={data_type}_sentences.gz')
+        sentence_data.to_csv(sentence_out_file, sep='\t', compression='gzip', index=False)
 
     # save separate file for each language
     # for lang_i, data_i in sentence_data.groupby('lang'):
