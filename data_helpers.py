@@ -1,5 +1,7 @@
 import pandas as pd
 from itertools import combinations, product
+
+from transformers import MBartTokenizer
 from unidecode import unidecode
 import re
 import numpy as np
@@ -264,3 +266,10 @@ def match_category(text_tokens, matchers):
             category = cat_i
             break
     return category
+
+def load_multilingual_tokenizer(tgt_lang_token, cache_dir='data/MT'):
+    model_name = 'facebook/mbart-large-50'
+    tokenizer = MBartTokenizer.from_pretrained(model_name,
+                                               tgt_lang=tgt_lang_token,
+                                               cache_dir=cache_dir)
+    return tokenizer

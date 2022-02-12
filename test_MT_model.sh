@@ -10,16 +10,17 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
-LANG=es
-#LANG=fr
-#LANG=it
-MODEL_DIR=finetune_translate_mbart_lang="$LANG"/checkpoint-54000/
+SOURCE_LANG=es
+#SOURCE_LANG=fr
+#SOURCE_LANG=it
+MODEL_DIR=finetune_translate_mbart_lang="$SOURCE_LANG"/finetune/checkpoint-1000/
 # default data
-#OUT_DIR=data/MT/data_"$LANG"
+#OUT_DIR=data/MT/data_"$SOURCE_LANG"
 #TEST_DATA_DIR="$OUT_DIR"/test_data
 # diff/same gender data
-OUT_DIR=data/MT/translation_data_type=relationship_lang="$LANG"/
-TEST_DATA_DIR=$OUT_DIR
+#OUT_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/
+OUT_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/finetune/
+TEST_DATA_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/data_"$SOURCE_LANG"/test_data/
 # offline transformers on server
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
