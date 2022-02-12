@@ -151,7 +151,7 @@ def main():
     training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir(training_out_dir)))
     # train only if we have no checkpoints or model dir is provided
     if(len(training_checkpoints) == 0 or model_dir is not None):
-        # output fine-tuned model in separate sub-dir because data is terrible
+        # output fine-tuned model in separate sub-dir because organization is terrible
         if(model_dir is not None):
             training_out_dir = os.path.join(training_out_dir, 'finetune')
         training_args = Seq2SeqTrainingArguments(
