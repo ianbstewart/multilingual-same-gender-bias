@@ -35,6 +35,15 @@ def build_relationship_target_sentence(lang, subject_word, sentence, article_pro
     sentence = re.sub('\s{2,}', ' ', sentence).strip()
     return sentence
 
+def words_take_same_article(word_1, word_2, lang):
+    same_article = False
+    if((lang == 'fr' or lang == 'it') and
+        (VOWEL_MATCHER.match(word_1)) and
+        (VOWEL_MATCHER.match(word_2))
+    ):
+        same_article = True
+    return same_article
+
 OCCUPATION_NON_GENDER_LANGS={'en'}
 def generate_occupation_relationship_sentence_data(relationship_sents, occupation_words, relationship_words, 
                                                    lang_art_PRON_lookup, lang_POSS_PRON_lookup,
@@ -47,7 +56,10 @@ def generate_occupation_relationship_sentence_data(relationship_sents, occupatio
         sent_topics_i = relationship_sents.loc[:, 'topic'].values
         # limit to occupation words that have different forms for female/male
         if(lang_i not in OCCUPATION_NON_GENDER_LANGS):
-            occupation_words_i = occupation_words[occupation_words.loc[:, f'{lang_i}_female']!=occupation_words.loc[:, f'{lang_i}_male']]
+            # check for whether words have different articles
+            # e.g. in FR "artiste" takes "l'" for M/F because of vowel
+            occupation_words_i = occupation_words[~occupation_words.apply(lambda x: words_take_same_article(x.loc[f'{lang_i}_female'], x.loc[f'{lang_i}_male'], lang_i), axis=1)]
+            # occupation_words_i = occupation_words[occupation_words.loc[:, f'{lang_i}_female']!=occupation_words.loc[:, f'{lang_i}_male']]
         else:
             occupation_words_i = occupation_words.copy()
         female_occupation_words_i = occupation_words_i.loc[:, f'{lang_i}_female'].values

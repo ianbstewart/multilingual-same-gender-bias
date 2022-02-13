@@ -57,6 +57,17 @@ def compute_metrics(eval_preds, tokenizer):
     result = {k: round(v, 4) for k, v in result.items()}
     return result
 
+
+def split_train_test(dataset):
+    test_pct = 0.1
+    train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
+    train_dataset = train_test_data['train']
+    N_train = int(len(train_dataset) * 0.8)
+    train_train_data = train_dataset.select(list(range(N_train))).flatten_indices()
+    train_val_data = train_dataset.select(list(range(N_train, len(train_dataset)))).flatten_indices()
+    test_data = train_test_data['test']
+    return test_data, train_train_data, train_val_data
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('out_dir')
@@ -116,13 +127,7 @@ def main():
         if(sample_size is not None and sample_size < len(dataset)):
             dataset = dataset.shuffle(seed=123).select(list(range(sample_size))).flatten_indices()
         # split into train/val/test etc
-        test_pct = 0.1
-        train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
-        train_dataset = train_test_data['train']
-        N_train = int(len(train_dataset) * 0.8)
-        train_train_data = train_dataset.select(list(range(N_train))).flatten_indices()
-        train_val_data = train_dataset.select(list(range(N_train, len(train_dataset)))).flatten_indices()
-        test_data = train_test_data['test']
+        test_data, train_train_data, train_val_data = split_train_test(dataset)
         # save => load later
         train_train_data.save_to_disk(train_data_file)
         train_val_data.save_to_disk(os.path.join(data_dir, 'val_data'))
@@ -149,6 +154,8 @@ def main():
     if(not os.path.exists(training_out_dir)):
         os.mkdir(training_out_dir)
     training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir(training_out_dir)))
+    # tmp debug
+    # print(f'training checkpoints = {training_checkpoints}')
     # train only if we have no checkpoints or model dir is provided
     if(len(training_checkpoints) == 0 or model_dir is not None):
         # output fine-tuned model in separate sub-dir because organization is terrible
@@ -199,6 +206,7 @@ def main():
     #     test_output_file = os.path.join(training_out_dir, f'test_data_output.gz')
     #     test_output_data.to_csv(test_output_file, sep='\t', compression='gzip', index=False)
     # ## TODO: BLEU, ROUGE, METEOR
+
 
 if __name__ == '__main__':
     main()
