@@ -127,6 +127,7 @@ def main():
         if (sample_size is not None and sample_size < len(dataset)):
             dataset = dataset.shuffle(seed=123).select(list(range(sample_size))).flatten_indices()
         # split into train/val/test etc
+        ## TODO: if relationship data, split by occupation word
         test_data, train_train_data, train_val_data = split_train_test(dataset)
         # save => load later
         train_train_data.save_to_disk(train_data_file)
