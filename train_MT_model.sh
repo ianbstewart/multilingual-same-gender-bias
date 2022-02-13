@@ -22,7 +22,7 @@ DATASET=data/MT/translation_data_type=relationship_lang=$SOURCE_LANG/
 MODEL_TYPE='mbart'
 SAMPLE_SIZE=100000
 # pretrained model
-MODEL_DIR=finetune_translate_mbart_lang=es/checkpoint-54000/
+MODEL_DIR=finetune_translate_mbart_lang=$SOURCE_LANG/checkpoint-54000/
 
 # disable internet
 export TRANSFORMERS_OFFLINE=1
