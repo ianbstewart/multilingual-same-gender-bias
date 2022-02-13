@@ -9,6 +9,16 @@ from data_helpers import load_clean_relationship_sent_data
 from transformers import MBartTokenizer
 from datasets.arrow_dataset import Dataset
 
+def resample_by_lang_count(sentence_data):
+    lang_sent_counts = sentence_data.loc[:, 'lang'].value_counts()
+    max_sent_count = lang_sent_counts.max()
+    resample_sentence_data = []
+    for lang_i, data_i in sentence_data.groupby('lang'):
+        data_i = data_i.sample(max_sent_count, replace=(data_i.shape[0] < max_sent_count), random_state=123)
+        resample_sentence_data.append(data_i)
+    resample_sentence_data = pd.concat(resample_sentence_data)
+    return resample_sentence_data
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('out_dir')
@@ -61,6 +71,9 @@ def main():
             'it': 'it_IT',
         }
         model_name = 'facebook/mbart-large-50'
+    # upsample for fairness => all langs have max(len(sent))
+    resample_sentence_data = resample_by_lang_count(sentence_data)
+    sentence_data = resample_sentence_data.copy()
     for lang_i, data_i in sentence_data.groupby('lang'):
         target_lang_token_i = lang_token_lookup[lang_i]
         if(model_type == 'mbart'):

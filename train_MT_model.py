@@ -124,7 +124,7 @@ def main():
             dataset = dataset.add_column('input_ids', [x['input_ids'] for x in src_token])
             dataset = dataset.add_column('attention_mask', [x['attention_mask'] for x in src_token])
             dataset = dataset.add_column('labels', [x['input_ids'] for x in tgt_token])
-        if(sample_size is not None and sample_size < len(dataset)):
+        if (sample_size is not None and sample_size < len(dataset)):
             dataset = dataset.shuffle(seed=123).select(list(range(sample_size))).flatten_indices()
         # split into train/val/test etc
         test_data, train_train_data, train_val_data = split_train_test(dataset)
