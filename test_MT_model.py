@@ -42,6 +42,8 @@ def main():
     # convert to str
     test_pred_output_str = [tokenizer.decode(x, skip_special_tokens=True) for x in test_pred_output]
     # write to file
+    if(not os.path.exists(out_dir)):
+        os.mkdir(out_dir)
     test_file = os.path.join(out_dir, 'test_data_output.gz')
     test_input = tokenizer.batch_decode(test_data['input_ids'], skip_special_tokens=True)
     test_output = tokenizer.batch_decode(test_data['labels'], skip_special_tokens=True)

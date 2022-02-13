@@ -1,15 +1,12 @@
 """
 Train MT model on predefined corpora.
 """
-import gzip
 import os
+import sys
 from argparse import ArgumentParser
-
-import pandas as pd
-import torch
 from datasets import load_dataset, load_metric, load_from_disk
 from transformers import MBartTokenizer, MBartForConditionalGeneration, Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
-from tqdm import tqdm
+from data_helpers import load_multilingual_tokenizer
 
 def postprocess_text(preds, labels):
     preds = [pred.strip() for pred in preds]
@@ -67,12 +64,14 @@ def main():
     parser.add_argument('--dataset', default='europarl_bilingual')
     parser.add_argument('--model_type', default='mbart') # mbart,
     parser.add_argument('--sample_size', type=int, default=None)
+    parser.add_argument('--model_dir', default=None) # pretrained model dir
     args = vars(parser.parse_args())
     out_dir = args['out_dir']
     dataset_name = args['dataset']
     source_lang = args['source_lang']
     model_type = args['model_type']
     sample_size = args['sample_size']
+    model_dir = args['model_dir']
 
     # load tokenizer
     lang_token_lookup = {
@@ -81,37 +80,41 @@ def main():
         'fr': 'fr_XX',
         'it': 'it_IT',
     }
-    target_lang_token = lang_token_lookup['en']
-    if (model_type == 'mbart'):
-        model_name = 'facebook/mbart-large-50'
-        tokenizer = MBartTokenizer.from_pretrained(model_name, tgt_lang=target_lang_token, cache_dir=out_dir)
+    target_lang = 'en'
+    target_lang_token = lang_token_lookup[target_lang]
+    if(model_type == 'mbart'):
+        tokenizer = load_multilingual_tokenizer(target_lang_token)
         # model = MBartForConditionalGeneration.from_pretrained(model_name)
     ## load data
     data_dir = os.path.join(out_dir, f'data_{source_lang}')
     train_data_file = os.path.join(data_dir, 'train_data')
     if(not os.path.exists(train_data_file)):
-        dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
-        dataset = dataset['train']
-        if(sample_size is not None):
+        # custom data set
+        if(os.path.exists(dataset_name)):
+            dataset = load_from_disk(dataset_name)
+        else:
+            dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
+            dataset = dataset['train']
+            # flip source/target lang in data
+            src_data = [x[source_lang] for x in dataset['translation']]
+            tgt_data = [x['en'] for x in dataset['translation']]
+            dataset.remove_columns('translation')
+            ## TODO: error w/ val data?
+            # if(sample_size is not None):
+            #     src_data = src_data[:sample_size]
+            #     tgt_data = tgt_data[:sample_size]
+            # tokenize text etc
+            # en_token = 'en_XX'
+            max_length = 128
+            # src_txt = [en_token + ' ' + x for x in src_data]
+            src_token = [tokenizer(x, max_length=max_length) for x in src_data]
+            tgt_token = [tokenizer(x, max_length=max_length) for x in tgt_data]
+            # tgt_token = [{'input_ids': x['input_ids'][1:]} for x in tgt_token]
+            dataset = dataset.add_column('input_ids', [x['input_ids'] for x in src_token])
+            dataset = dataset.add_column('attention_mask', [x['attention_mask'] for x in src_token])
+            dataset = dataset.add_column('labels', [x['input_ids'] for x in tgt_token])
+        if(sample_size is not None and sample_size < len(dataset)):
             dataset = dataset.shuffle(seed=123).select(list(range(sample_size))).flatten_indices()
-        # flip source/target lang in data
-        src_data = [x[source_lang] for x in dataset['translation']]
-        tgt_data = [x['en'] for x in dataset['translation']]
-        dataset.remove_columns('translation')
-        ## TODO: error w/ val data?
-        # if(sample_size is not None):
-        #     src_data = src_data[:sample_size]
-        #     tgt_data = tgt_data[:sample_size]
-        # tokenize text etc
-        en_token = 'en_XX'
-        max_length = 128
-        # src_txt = [en_token + ' ' + x for x in src_data]
-        src_token = [tokenizer(x, max_length=max_length) for x in src_data]
-        tgt_token = [tokenizer(x, max_length=max_length) for x in tgt_data]
-        # tgt_token = [{'input_ids': x['input_ids'][1:]} for x in tgt_token]
-        dataset = dataset.add_column('input_ids', [x['input_ids'] for x in src_token])
-        dataset = dataset.add_column('attention_mask', [x['attention_mask'] for x in src_token])
-        dataset = dataset.add_column('labels', [x['input_ids'] for x in tgt_token])
         # split into train/val/test etc
         test_pct = 0.1
         train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
@@ -128,24 +131,29 @@ def main():
         train_train_data = load_from_disk(train_data_file)
         train_val_data = load_from_disk(os.path.join(data_dir, 'val_data'))
     ## load model
-    if(model_type == 'mbart'):
+    if (model_dir is not None):
+        model = MBartForConditionalGeneration.from_pretrained(model_dir, cache_dir=out_dir)
+    elif(model_type == 'mbart'):
+        model_name = 'facebook/mbart-large-50'
         model = MBartForConditionalGeneration.from_pretrained(model_name, cache_dir=out_dir)
-        device_id = 0
-        device = f'cuda:{device_id}'
-        model.to(device)
+    device_id = 0
+    device = f'cuda:{device_id}'
+    model.to(device)
 
     ## set up trainer
-    from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
     batch_size = 4
     num_train_epochs = 3
-    ## TODO: retrain w/ more epochs?? performance is basically noise when using multiple langs
+    ## TODO: w/ multilingual model => retrain w/ more epochs?? performance is basically noise when using multiple langs
     ## TODO: allow re-training in case of timeout, e.g. load model and trainer from latest checkpoint
-
     training_out_dir = f'finetune_translate_mbart_lang={source_lang}'
     if(not os.path.exists(training_out_dir)):
         os.mkdir(training_out_dir)
     training_checkpoints = list(filter(lambda x: 'checkpoint' in x, os.listdir(training_out_dir)))
-    if(len(training_checkpoints) == 0):
+    # train only if we have no checkpoints or model dir is provided
+    if(len(training_checkpoints) == 0 or model_dir is not None):
+        # output fine-tuned model in separate sub-dir because organization is terrible
+        if(model_dir is not None):
+            training_out_dir = os.path.join(training_out_dir, 'finetune')
         training_args = Seq2SeqTrainingArguments(
             training_out_dir,
             evaluation_strategy='epoch',
@@ -169,8 +177,8 @@ def main():
         )
         ## train!!
         trainer.train()
-    most_recent_checkpoint = os.path.join(training_out_dir, training_checkpoints[0])
-    trained_model = MBartForConditionalGeneration.from_pretrained(most_recent_checkpoint)
+    # most_recent_checkpoint = os.path.join(training_out_dir, training_checkpoints[0])
+    # trained_model = MBartForConditionalGeneration.from_pretrained(most_recent_checkpoint)
     ## evaluate!
     # test_data = load_from_disk(os.path.join(data_dir, 'test_data'))
     # test_cols = ['input_ids', 'attention_mask', 'labels']
