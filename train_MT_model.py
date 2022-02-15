@@ -57,15 +57,28 @@ def compute_metrics(eval_preds, tokenizer):
     result = {k: round(v, 4) for k, v in result.items()}
     return result
 
-
-def split_train_test(dataset):
+def split_train_test(dataset, split_var=None):
     test_pct = 0.1
-    train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
-    train_dataset = train_test_data['train']
-    N_train = int(len(train_dataset) * 0.8)
-    train_train_data = train_dataset.select(list(range(N_train))).flatten_indices()
-    train_val_data = train_dataset.select(list(range(N_train, len(train_dataset)))).flatten_indices()
-    test_data = train_test_data['test']
+    if(split_var is None):
+        train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
+        train_dataset = train_test_data['train']
+        N_train = int(len(train_dataset) * 0.8)
+        train_train_data = train_dataset.select(list(range(N_train))).flatten_indices()
+        train_val_data = train_dataset.select(list(range(N_train, len(train_dataset)))).flatten_indices()
+        test_data = train_test_data['test']
+    else:
+        ## split data by non-overlapping variable values
+        ## ex. if split_var is "occupation" words, use "lawyer" for train but not test, etc.
+        split_var_vals = list(set(dataset[split_var]))
+        np.random.shuffle(split_var_vals)
+        train_pct = 0.8
+        val_pct = 0.1
+        train_split_var_vals = split_var_vals[:int(len(split_var_vals) * train_pct)]
+        val_split_var_vals = split_var_vals[int(len(split_var_vals) * train_pct):int(len(split_var_vals) * (train_pct + val_pct))]
+        test_split_var_vals = split_var_vals[int(len(split_var_vals) * (train_pct + val_pct)):]
+        train_train_data = dataset.filter(lambda x: x[split_var] in train_split_var_vals, keep_in_memory=True, cache_file_name=None).flatten_indices()
+        train_val_data = dataset.filter(lambda x: x[split_var] in val_split_var_vals, keep_in_memory=True, cache_file_name=None).flatten_indices()
+        test_data = dataset.filter(lambda x: x[split_var] in test_split_var_vals, keep_in_memory=True, cache_file_name=None).flatten_indices()
     return test_data, train_train_data, train_val_data
 
 def main():
@@ -103,8 +116,10 @@ def main():
         # custom data set
         if(os.path.exists(dataset_name)):
             dataset = load_from_disk(dataset_name)
+            split_var = 'subject_word_en'
         else:
             dataset = load_dataset(dataset_name, lang1='en', lang2=source_lang)
+            split_var = None
             dataset = dataset['train']
             # flip source/target lang in data
             src_data = [x[source_lang] for x in dataset['translation']]
@@ -128,7 +143,7 @@ def main():
             dataset = dataset.shuffle(seed=123).select(list(range(sample_size))).flatten_indices()
         # split into train/val/test etc
         ## TODO: if relationship data, split by occupation word
-        test_data, train_train_data, train_val_data = split_train_test(dataset)
+        test_data, train_train_data, train_val_data = split_train_test(dataset, split_var=split_var)
         # save => load later
         train_train_data.save_to_disk(train_data_file)
         train_val_data.save_to_disk(os.path.join(data_dir, 'val_data'))

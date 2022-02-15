@@ -10,12 +10,12 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
-#SOURCE_LANG=es
+SOURCE_LANG=es
 #SOURCE_LANG=fr
-SOURCE_LANG=it
+#SOURCE_LANG=it
 # "standard" data
 #OUT_DIR=data/MT
-SAMPLE_SIZE=100000
+#SAMPLE_SIZE=100000
 #DATASET='europarl_bilingual'
 # custom data
 OUT_DIR=data/MT/translation_data_type=relationship_lang=$SOURCE_LANG/
@@ -27,7 +27,7 @@ MODEL_DIR=finetune_translate_mbart_lang=$SOURCE_LANG/checkpoint-54000/
 # disable internet
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
-python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE
+#python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE
 #python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE --sample_size $SAMPLE_SIZE
 # pretrained model
 python train_MT_model.py $OUT_DIR --source_lang $SOURCE_LANG --dataset $DATASET --model_type $MODEL_TYPE --model_dir $MODEL_DIR

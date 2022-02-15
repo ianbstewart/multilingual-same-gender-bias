@@ -2,12 +2,13 @@
 Test fully-trained MT model.
 """
 import os
+import re
 from argparse import ArgumentParser
 
 import pandas as pd
 import torch
 from transformers import MBartTokenizer, MBartForConditionalGeneration
-from datasets import load_from_disk
+from datasets import load_from_disk, load_metric
 from tqdm import tqdm
 
 def main():
@@ -47,13 +48,25 @@ def main():
     test_file = os.path.join(out_dir, 'test_data_output.gz')
     test_input = tokenizer.batch_decode(test_data['input_ids'], skip_special_tokens=True)
     test_output = tokenizer.batch_decode(test_data['labels'], skip_special_tokens=True)
-    test_output_data = pd.DataFrame([test_input, test_output, test_pred_output_str], index=['input', 'output', 'pred']).transpose()
-    test_output_data.to_csv(test_file, sep='\t', compression='gzip', index=False)
+    test_output_data = pd.DataFrame([test_input, test_output, test_pred_output_str],
+                                    index=['input', 'output', 'pred']).transpose()
+    # test_output_data.to_csv(test_file, sep='\t', compression='gzip', index=False)
 
-    # TODO: compute accuracy metrics
-    # bleu_metric = load_metric('BLEU')
-    # rouge_metric = load_metric('rouge')
+    ## compute accuracy scores!!
+    # convert back to tokens => BLEU
+    underscore_matcher = re.compile('^▁')
+    test_output_data = test_output_data.assign(**{
+        'output_tokens' : test_output_data.loc[:, 'output'].apply(lambda x: list(map(lambda y: underscore_matcher.sub('', y), tokenizer.tokenize(x)))),
+        'pred_tokens' : test_output_data.loc[:, 'pred'].apply(lambda x: list(map(lambda y: underscore_matcher.sub('', y), tokenizer.tokenize(x)))),
+    })
+    bleu_metric = load_metric('bleu')
+    rouge_metric = load_metric('rouge')
     # meteor_metric = load_metric('meteor')
+    test_output_data = test_output_data.assign(**{
+        'BLEU_score' : test_output_data.apply(lambda x: bleu_metric.compute(predictions=[x.loc['pred_tokens']], references=[[x.loc['output_tokens']]])['bleu'], axis=1),
+        'ROUGE_score' : test_output_data.apply(lambda x: rouge_metric.compute(predictions=[x.loc['pred']], references=[x.loc['output']])['rougeL'].mid.fmeasure, axis=1),
+    })
+    test_output_data.to_csv(test_file, sep='\t', compression='gzip', index=False)
 
 if __name__ == '__main__':
     main()
