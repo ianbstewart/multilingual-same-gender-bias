@@ -216,6 +216,12 @@ def load_clean_relationship_sent_data(langs=['es', 'fr', 'it', 'en']):
     })
     return relationship_sent_data
 
+def get_relationship_topic(sentence, relationship_topic_lookup):
+    for topic_i, sent_matcher_i in relationship_topic_lookup:
+        if(sent_matcher_i.match(sentence) is not None):
+            return topic_i
+    return ''
+
 def load_clean_translation_data(data_file):
     data = pd.read_csv(data_file, compression='gzip', sep='\t')
     # remove accidental EN translations
@@ -235,7 +241,7 @@ def load_clean_translation_data(data_file):
     valid_data = valid_data.assign(**{
         'subject_relationship_gender_match': valid_data.loc[:, ['relationship_gender_match', 'subject_gender_match']].min(axis=1)
     })
-    # fix relationship category names
+    # fix relationship target names
     relationship_target_categories = {
         'FRIEND': ['boyfriend', 'girlfriend'],
         'ENGAGE': ['fiance', 'fiancee'],
@@ -246,6 +252,23 @@ def load_clean_translation_data(data_file):
     }
     valid_data = valid_data.assign(**{
         'relationship_word_category': valid_data.loc[:, 'relationship_word_en'].apply(relationship_target_categories.get)
+    })
+    # fix relationship topics
+    relationship_sent_template_data = pd.read_csv('data/multilingual_relationship_sentences.tsv', sep='\t')
+    relationship_topics = relationship_sent_template_data.loc[:, 'topic'].values
+    lang_relationship_topic_lookup = {
+        l: list(zip(relationship_sent_template_data.loc[:, f'{l}_sentence'].values, relationship_topics))
+        for l in langs
+    }
+    # for each lang, get list of (relationship_topic, topic_matcher)
+    # replace placeholders (X, Y, PRON) w/ regex matcher
+    lang_relationship_topic_lookup = {
+        k: [(v1, re.compile(re.sub('([XY]|PRON)', '.*', k1).strip())) for k1, v1 in v]
+        for k, v in lang_relationship_topic_lookup.items()
+    }
+    pass
+    valid_data = valid_data.assign(**{
+        'relationship_topic': valid_data.apply(lambda x: get_relationship_topic(x.loc['sent'], lang_relationship_topic_lookup[x.loc['lang']]), axis=1)
     })
     return valid_data
 
