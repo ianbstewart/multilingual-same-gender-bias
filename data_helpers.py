@@ -6,6 +6,8 @@ from unidecode import unidecode
 import re
 import numpy as np
 from ast import literal_eval
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 VOWEL_MATCHER = re.compile('^[aeiou].+')
 def build_relationship_target_sentence(lang, subject_word, sentence, article_pronoun_lookup, poss_pronoun_lookup, relationship_word_gender, relationship_word, subject_word_gender=None):
@@ -308,3 +310,40 @@ def load_multilingual_tokenizer(tgt_lang_token, cache_dir='data/MT'):
                                                tgt_lang=tgt_lang_token,
                                                cache_dir=cache_dir)
     return tokenizer
+
+def plot_scores_by_attr(data, score_var='subject_gender_match', 
+                        type_var='relationship_type', 
+                        type_var_name='Relationship type',
+                        plot_attr_vars=None):
+    if(plot_attr_vars is None):
+        plot_attr_vars = [
+        ('subject_gender','Gender'),
+        ('lang', 'Language'),
+        ('relationship_word_category', 'Target word'),
+        ('relationship_topic', 'Relationship topic'),
+        ]
+    N_cols = len(plot_attr_vars) + 1
+    height = 4
+    width = N_cols*3.
+    sns.set_style('whitegrid')
+    f, axs = plt.subplots(1, N_cols, figsize=(width, height))
+    bar_width = 0.5
+    # plot overall scores
+    overall_plot = sns.barplot(data=data, x=type_var, y=score_var, ax=axs[0])
+    overall_plot.set(xlabel=type_var_name)
+    # plot scores per attribute
+    for i, (attr_var_i, title_i) in enumerate(plot_attr_vars):
+        ax_i = axs[i+1]
+        width_i = data.loc[:, attr_var_i].nunique() * 1.5
+        # set figure size
+        sns.set(rc={'figure.figsize' : (width_i, height)})
+        # rotate x ticks
+        ax_i.set_xticklabels(ax_i.get_xticklabels(), rotation=45)
+        plot_i = sns.barplot(data=data, x=attr_var_i, y=score_var, hue=type_var, ax=ax_i)
+        plot_i.set(ylabel=None, yticklabels=[], xlabel=title_i)
+        if(i+1 < N_cols-1):
+            plot_i.get_legend().remove()
+        else:
+            ax_i.legend(loc='center right')
+    plt.tight_layout()
+    plt.show()
