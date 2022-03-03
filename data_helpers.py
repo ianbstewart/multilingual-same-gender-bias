@@ -1,3 +1,5 @@
+from os import environ
+
 import pandas as pd
 from itertools import combinations, product
 
@@ -8,9 +10,44 @@ import numpy as np
 from ast import literal_eval
 import matplotlib.pyplot as plt
 import seaborn as sns
+from time import sleep
+from google.cloud import translate
+
+def set_up_google_translate_client():
+    environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'data/google_auth_key.json'
+    environ['PROJECT_ID'] = 'arcane-rigging-115120'
+    environ.get('PROJECT_ID')
+    project_id = environ['PROJECT_ID']
+    parent = f'projects/{project_id}'
+    client = translate.TranslationServiceClient()
+    return parent, client
+
+def get_google_translations(text, lang, client, project_parent):
+    translate_success = False
+    try_ctr = 0
+    max_tries = 5
+    SLEEP_TIME = 30
+    if(type(text) is str):
+        text = [text]
+    while(not translate_success and try_ctr < max_tries):
+        try:
+            response = client.translate_text(contents=text, target_language_code=lang, parent=project_parent)
+            translate_success = True
+        except Exception as e:
+            print(f'translation error={e} with text={text}; sleeping for {SLEEP_TIME} sec')
+            try_ctr += 1
+            sleep(SLEEP_TIME)
+    response_text = list(map(lambda x: x.translated_text, response._pb.translations))
+    return response_text
 
 VOWEL_MATCHER = re.compile('^[aeiou].+')
-def build_relationship_target_sentence(lang, subject_word, sentence, article_pronoun_lookup, poss_pronoun_lookup, relationship_word_gender, relationship_word, subject_word_gender=None):
+def build_relationship_target_sentence(lang, subject_word, sentence,
+                                       article_pronoun_lookup,
+                                       poss_pronoun_lookup,
+                                       relationship_word_gender,
+                                       relationship_word,
+                                       subject_word_gender=None,
+                                       add_subject_info=None):
     target_poss_pronoun = poss_pronoun_lookup[relationship_word_gender]
     if(lang == 'en'):
         target_poss_pronoun = poss_pronoun_lookup[subject_word_gender]
@@ -28,6 +65,11 @@ def build_relationship_target_sentence(lang, subject_word, sentence, article_pro
     if(subject_word_article != "l'"):
         subject_word_article += ' '
     subject_word_NP = f'{subject_word_article}{subject_word}'
+    ## TODO: optional subject info
+    if(add_subject_info is not None):
+        subject_info_DP = add_subject_info[subject_word_gender][lang]
+        subject_word_NP = f'{subject_word_NP}, {subject_info_DP},'
+        pass
     replacement_pairs = [
         ('X', subject_word_NP), ('PRON', target_poss_pronoun), ('Y', relationship_word)
     ]
@@ -49,7 +91,9 @@ def words_take_same_article(word_1, word_2, lang):
 OCCUPATION_NON_GENDER_LANGS={'en'}
 def generate_occupation_relationship_sentence_data(relationship_sents, occupation_words, relationship_words, 
                                                    lang_art_PRON_lookup, lang_POSS_PRON_lookup,
-                                                   relationship_type='same_gender', langs=['es']):
+                                                   relationship_type='same_gender',
+                                                   langs=['es'],
+                                                   add_subject_info=None):
     data = []
     for lang_i in langs:
         article_pronoun_lookup_i = lang_art_PRON_lookup[lang_i]
@@ -78,11 +122,11 @@ def generate_occupation_relationship_sentence_data(relationship_sents, occupatio
         for sent_j, sent_topic_j in zip(sents_i, sent_topics_i):
             subject_word_gender_i = 'male'
             for subject_word_k, relationship_word_k, relationship_gender_k in male_subject_occupation_relationship_combos_i:
-                final_sent_j = build_relationship_target_sentence(lang_i, subject_word_k, sent_j, article_pronoun_lookup_i, poss_pronoun_lookup_i, relationship_gender_k, relationship_word_k, subject_word_gender=subject_word_gender_i)
+                final_sent_j = build_relationship_target_sentence(lang_i, subject_word_k, sent_j, article_pronoun_lookup_i, poss_pronoun_lookup_i, relationship_gender_k, relationship_word_k, subject_word_gender=subject_word_gender_i, add_subject_info=add_subject_info)
                 data.append([final_sent_j, lang_i, subject_word_k, relationship_word_k, subject_word_gender_i, sent_topic_j])
             subject_word_gender_i = 'female'
             for subject_word_k, relationship_word_k, relationship_gender_k in female_subject_occupation_relationship_combos_i:
-                final_sent_j = build_relationship_target_sentence(lang_i, subject_word_k, sent_j, article_pronoun_lookup_i, poss_pronoun_lookup_i, relationship_gender_k, relationship_word_k, subject_word_gender=subject_word_gender_i)
+                final_sent_j = build_relationship_target_sentence(lang_i, subject_word_k, sent_j, article_pronoun_lookup_i, poss_pronoun_lookup_i, relationship_gender_k, relationship_word_k, subject_word_gender=subject_word_gender_i, add_subject_info=add_subject_info)
                 data.append([final_sent_j, lang_i, subject_word_k, relationship_word_k, subject_word_gender_i, sent_topic_j])
     data = pd.DataFrame(data, columns=['sent', 'lang', 'subject_word', 'relationship_word', 'subject_gender', 'relationship_topic'])
     other_gender_lookup = {'male' : 'female', 'female' : 'male'}
@@ -182,22 +226,32 @@ def translate_subject_relationship_words(data, occupation_words, relationship_wo
     })
     return data
 
-def load_clean_relationship_sent_data(langs=['es', 'fr', 'it', 'en']):
+def load_subject_gender_phrases(langs=['es']):
+    subject_gender_phrases = pd.read_csv('data/subject_gender_phrases.csv', index_col=False)
+    add_subject_info = subject_gender_phrases.groupby('subject_gender').apply(lambda x: {l: x.loc[:, l].values[0] for l in langs}).to_dict()
+    return add_subject_info
+
+def load_clean_relationship_sent_data(langs=['es', 'fr', 'it', 'en'], append_subject_info=False):
     occupation_words, relationship_words, relationship_sents, _, lang_art_PRON_lookup, lang_POSS_PRON_lookup = load_relationship_occupation_template_data()
-    same_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents, 
+    add_subject_info = None
+    if(append_subject_info):
+        add_subject_info = load_subject_gender_phrases(langs=langs)
+    same_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents,
                                                                                         occupation_words, 
                                                                                         relationship_words,
                                                                                         lang_art_PRON_lookup, 
                                                                                         lang_POSS_PRON_lookup,
                                                                                         relationship_type='same_gender', 
-                                                                                        langs=langs)
+                                                                                        langs=langs,
+                                                                                        add_subject_info=add_subject_info)
     diff_gender_relationship_sent_data = generate_occupation_relationship_sentence_data(relationship_sents, 
                                                                                         occupation_words, 
                                                                                         relationship_words,
                                                                                         lang_art_PRON_lookup, 
                                                                                         lang_POSS_PRON_lookup,
                                                                                         relationship_type='diff_gender', 
-                                                                                        langs=langs)
+                                                                                        langs=langs,
+                                                                                        add_subject_info=add_subject_info)
     relationship_sent_data = pd.concat([
         same_gender_relationship_sent_data.assign(**{'relationship_type' : 'same_gender'}),
         diff_gender_relationship_sent_data.assign(**{'relationship_type' : 'diff_gender'}),
