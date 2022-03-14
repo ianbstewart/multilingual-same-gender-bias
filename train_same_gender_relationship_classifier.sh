@@ -19,4 +19,4 @@ LANG='it'
 # disable internet
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
-python $OUT_DIR --model_name $MODEL_NAME --lang $LANG
+python train_same_gender_relationship_classifier.py $OUT_DIR --model_name $MODEL_NAME --lang $LANG
