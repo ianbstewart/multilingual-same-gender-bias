@@ -57,7 +57,7 @@ def process_train_model(lang, model_name, data, out_dir,
     def compute_metric_func(eval_pred):
         print(f'predictions = {eval_pred.predictions}')
         score_dict = {
-            'f1' : f1_score(np.argmax(eval_pred.predictions, axis=1),
+            'f1' : f1_score(eval_pred.predictions[0].argmax(axis=1),
                             eval_pred.label_ids)
         }
         # return compute_metric.compute(predictions=np.argmax(eval_pred.predictions, axis=1), references=eval_pred.label_ids)
