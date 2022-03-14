@@ -52,7 +52,7 @@ def process_train_model(lang, model_name, data, out_dir,
         num_train_epochs=num_train_epochs
     )
     compute_metric = load_metric('f1')
-    compute_metric_func = lambda x: compute_metric.compute(predictions=np.array(x.predictions), references=np.array(x.label_ids))
+    compute_metric_func = lambda x: compute_metric.compute(predictions=x.predictions.argmax(axis=1), references=x.label_ids)
     trainer = Trainer(
         model,
         training_args,
