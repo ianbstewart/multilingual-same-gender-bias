@@ -123,7 +123,7 @@ def main():
     # process
     train_data, test_data, tokenizer = get_train_test_data(relationship_sent_data, lang, output_var, output_var_default)
     # train
-    train_model(model_name, out_dir, train_data, test_data, tokenizer)
+    # train_model(model_name, out_dir, train_data, test_data, tokenizer)
 
     ## test model
     test_model(out_dir, test_data)
