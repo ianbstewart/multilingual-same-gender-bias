@@ -23,7 +23,7 @@ def process_train_model(lang, model_name, data, out_dir,
     """
     tokenizer = load_multilingual_tokenizer(tgt_lang_token=lang)
     max_length = 64
-    input_data = tokenizer.batch_decode_plus(data.loc[:, 'sent'].values,
+    input_data = tokenizer.batch_encode_plus(data.loc[:, 'sent'].values,
                                              max_length=max_length,
                                              truncation=True)
     # add labels
