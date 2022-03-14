@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 import numpy as np
 import torch
 from datasets import load_metric
+from sklearn.metrics import f1_score
 from transformers import MBartForSequenceClassification, TrainingArguments, Trainer
 from datasets.arrow_dataset import Dataset
 from data_helpers import load_clean_relationship_sent_data, load_multilingual_tokenizer
@@ -52,7 +53,16 @@ def process_train_model(lang, model_name, data, out_dir,
         num_train_epochs=num_train_epochs
     )
     compute_metric = load_metric('f1')
-    compute_metric_func = lambda x: compute_metric.compute(predictions=np.argmax(x.predictions, axis=1), references=x.label_ids)
+    # tmp debug lol
+    def compute_metric_func(eval_pred):
+        print(f'predictions = {eval_pred.predictions}')
+        score_dict = {
+            'f1' : f1_score(np.argmax(eval_pred.predictions, axis=1),
+                            eval_pred.label_ids)
+        }
+        # return compute_metric.compute(predictions=np.argmax(eval_pred.predictions, axis=1), references=eval_pred.label_ids)
+        return score_dict
+    # compute_metric_func = lambda x: compute_metric.compute(predictions=np.argmax(x.predictions, axis=1), references=x.label_ids)
     trainer = Trainer(
         model,
         training_args,
