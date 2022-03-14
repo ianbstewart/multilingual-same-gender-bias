@@ -55,7 +55,7 @@ def process_train_model(lang, model_name, data, out_dir,
     compute_metric = load_metric('f1')
     # tmp debug lol
     def compute_metric_func(eval_pred):
-        print(f'predictions = {eval_pred.predictions}')
+        # print(f'predictions = {eval_pred.predictions}')
         score_dict = {
             'f1' : f1_score(eval_pred.predictions[0].argmax(axis=1),
                             eval_pred.label_ids)
