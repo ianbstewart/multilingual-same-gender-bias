@@ -12,7 +12,7 @@
 #SBATCH --account=mihalcea0
 
 OUT_DIR=relationship_type_classifier
-MODEL_NAME=facebook/mbart-large
+MODEL_NAME=facebook/mbart-large-50
 LANG='it'
 
 # queue server
