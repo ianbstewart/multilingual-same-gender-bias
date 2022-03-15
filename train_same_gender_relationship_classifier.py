@@ -100,6 +100,7 @@ def test_model(out_dir, test_data):
     latest_checkpoint_dir = list(sorted(os.listdir(out_dir), key=lambda x: int(x.split('-')[-1])))[-1]
     latest_checkpoint_dir = os.path.join(out_dir, latest_checkpoint_dir)
     model = MBartForSequenceClassification.from_pretrained(latest_checkpoint_dir)
+    model.to(torch.cuda.current_device())
     model.eval()
     with torch.no_grad():
         test_data_output = [model(**{k: v.unsqueeze(0).to(torch.cuda.current_device()) for k, v in x.items()}) for x in
