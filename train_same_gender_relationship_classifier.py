@@ -121,6 +121,8 @@ def main():
     ## load data
     relationship_sent_data = load_clean_relationship_sent_data(langs=[lang])
     # process
+    output_var = 'relationship_type'
+    output_var_default = 'same_gender'
     train_data, test_data, tokenizer = get_train_test_data(relationship_sent_data, lang, output_var, output_var_default)
     # train
     # train_model(model_name, out_dir, train_data, test_data, tokenizer)
