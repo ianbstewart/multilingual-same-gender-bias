@@ -182,7 +182,7 @@ def load_relationship_occupation_template_data():
             'male' : 'his'
         }
     }
-    return occupation_words, relationship_words, relationship_sents, langs, lang_art_PRON_lookup, lang_POSS_PRON_lookup    
+    return occupation_words, relationship_words, relationship_sents, langs, lang_art_PRON_lookup, lang_POSS_PRON_lookup
 
 ## convert subject and translation words -> en
 def extract_subject_relationship_gender(data, relationship_words):
