@@ -196,6 +196,5 @@ def load_spacy_model(lang):
     nlp_pipeline = spacy.load(lang_model_name)
     return nlp_pipeline
 
-
 if __name__ == '__main__':
     main()
