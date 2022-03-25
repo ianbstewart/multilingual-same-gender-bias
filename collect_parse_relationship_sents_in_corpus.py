@@ -7,8 +7,11 @@ import os
 from argparse import ArgumentParser
 import bz2
 import re
+
+import numpy as np
 import pandas as pd
 import spacy
+from nltk.corpus import wordnet
 from tqdm import tqdm
 tqdm.pandas()
 from data_helpers import load_relationship_occupation_template_data
@@ -51,6 +54,45 @@ def find_phrase_possessor(sent, phrase_word, lang):
         if(len(phrase_children) > 0):
             possessor = phrase_children[0]
     return possessor
+
+PERSON_CATEGORY_MATCHER = re.compile('person.n.01')
+LEMMA_NUM_MATCHER = re.compile('(?<=\.n\.)(\d+)(?=\.)')
+WORDNET_LANG_LOOKUP = {
+    'es' : 'spa',
+    'fr' : 'fra',
+    'it' : 'ita',
+}
+def is_word_a_person(word, lang):
+    wordnet_lang = WORDNET_LANG_LOOKUP[lang]
+    word_is_person = False
+    # assume capital letter => name => person
+    if(word.istitle()):
+        word_is_person = True
+    else:
+    #     print(f'word type={type(word)}')
+        word_lemmas = wordnet.lemmas(word, lang=wordnet_lang)
+#         print(f'word={word}; lemmas={word_lemmas}')
+        # find main word sense
+        # sort lemmas by number: lower number => more "core" meaning
+        word_lemma_nums = list(map(lambda x: int(LEMMA_NUM_MATCHER.search(str(x)).group(0)) if LEMMA_NUM_MATCHER.search(str(x)) is not None else np.inf, word_lemmas))
+        if(len(word_lemma_nums) > 0):
+            max_word_lemma_num = min(word_lemma_nums)
+            main_lemmas = [x for x,y in zip(word_lemmas, word_lemma_nums) if y==max_word_lemma_num]
+            # best case: match lemma name w/ weird format e.g. "donna.n.8.donna"
+            word_lemma_matcher = re.compile(f'Lemma\(\'({word})\.n.+')
+            if(len(main_lemmas) > 1):
+                word_match_main_lemma = list(filter(lambda x: word_lemma_matcher.match(str(x)), main_lemmas))
+                if(len(word_match_main_lemma) > 0):
+                    main_lemma = word_match_main_lemma[0]
+                else:
+                    main_lemma = main_lemmas[0]
+                # get hypernyms for main lemma
+                main_lemma_hypernym_paths = main_lemma.synset().hypernym_paths()
+                main_lemma_main_path = main_lemma_hypernym_paths[0]
+                path_contains_person_category = any(map(lambda x: PERSON_CATEGORY_MATCHER.match(x.name()), main_lemma_main_path))
+                if(path_contains_person_category):
+                    word_is_person = True
+    return word_is_person
 
 def main():
     parser = ArgumentParser()
@@ -95,31 +137,28 @@ def main():
         relationship_sents.to_csv(relationship_sent_data_file, sep='\t', compression='gzip', index=False)  # single word
     else:
         relationship_sents = pd.read_csv(relationship_sent_data_file, sep='\t')
+    # tmp debugging
+    # relationship_sents = relationship_sents.head(1000)
 
     ## get possessors
-    lang_model_lookup = {
-        'es' : 'es_dep_news_trf',
-        'fr' : 'fr_dep_news_trf',
-        'it' : 'it_core_news_lg',
-    }
-    lang_model_name = lang_model_lookup[lang]
-    nlp_pipeline = spacy.load(lang_model_name)
+    nlp_pipeline = load_spacy_model(lang)
     relationship_sents = relationship_sents.assign(**{
         'sent_parse' : relationship_sents.loc[:, 'sent'].progress_apply(nlp_pipeline)
     })
     relationship_sents = relationship_sents.assign(**{
-        'relationship_word_source' : relationship_sents.progress_apply(lambda x: find_phrase_possessor(x.loc['sent_parse'], x.loc['relationship_word']), axis=1)
+        'relationship_word_source' : relationship_sents.progress_apply(lambda x: find_phrase_possessor(x.loc['sent_parse'], x.loc['relationship_word'], lang), axis=1)
     })
-    # get actual gender from morphology
+    # get word source gender from morphology
     relationship_sents = relationship_sents.assign(**{
         'relationship_word_source_gender': relationship_sents.loc[:, 'relationship_word_source'].apply(
             lambda x: x.morph.get('Gender')[0] if x is not None and len(x.morph.get('Gender')) > 0 else None)
     })
+    relationship_sents = relationship_sents[relationship_sents.loc[:, 'relationship_word_source_gender'].apply(lambda x: x is not None)]
     relationship_sents_with_source = relationship_sents[relationship_sents.loc[:, 'relationship_word_source'].apply(lambda x: x is not None)]
     # fix gender labels
     gender_lookup = {
         'Masc': 'male',
-        'Fem': 'female'
+        'Fem': 'female',
     }
     relationship_sents_with_source = relationship_sents_with_source.assign(**{'relationship_word_source_gender': relationship_sents_with_source.loc[:,'relationship_word_source_gender'].apply(gender_lookup.get)})
     ## add target gender
@@ -137,9 +176,26 @@ def main():
     relationship_sents_with_source = relationship_sents_with_source.assign(**{
         'relationship_word_gender': relationship_sents_with_source.apply(lambda x: relationship_word_gender_lookup[x.loc['lang']][x.loc['relationship_word'].split(' ')[-1]], axis=1)
     })
+    
+    ## filter to "person" nouns via wordnet
+    relationship_sents_with_source = relationship_sents_with_source.assign(**{
+        'relationship_word_source_is_person': relationship_sents_with_source.apply(lambda x: is_word_a_person(x.loc['relationship_word_source'].text, lang=x.loc['lang']), axis=1)
+    })
+    relationship_sents_with_person_source = relationship_sents_with_source[relationship_sents_with_source.loc[:, 'relationship_word_source_is_person']]
     ## save to file for analysis!!
     relationship_sents_with_source_file = os.path.join(out_dir, f'lang={lang}_relationship_words_with_source_sent_data.gz')
-    relationship_sents_with_source.to_csv(relationship_sents_with_source_file, sep='\t', compression='gzip', index=False)
+    relationship_sents_with_person_source.to_csv(relationship_sents_with_source_file, sep='\t', compression='gzip', index=False)
+
+def load_spacy_model(lang):
+    lang_model_lookup = {
+        'es': 'es_dep_news_trf',
+        'fr': 'fr_dep_news_trf',
+        'it': 'it_core_news_lg',
+    }
+    lang_model_name = lang_model_lookup[lang]
+    nlp_pipeline = spacy.load(lang_model_name)
+    return nlp_pipeline
+
 
 if __name__ == '__main__':
     main()
