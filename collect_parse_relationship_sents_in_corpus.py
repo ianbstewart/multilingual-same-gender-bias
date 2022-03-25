@@ -142,6 +142,7 @@ def main():
 
     ## get possessors
     nlp_pipeline = load_spacy_model(lang)
+
     relationship_sents = relationship_sents.assign(**{
         'sent_parse' : relationship_sents.loc[:, 'sent'].progress_apply(nlp_pipeline)
     })
@@ -195,7 +196,6 @@ def load_spacy_model(lang):
     lang_model_name = lang_model_lookup[lang]
     nlp_pipeline = spacy.load(lang_model_name)
     return nlp_pipeline
-
 
 if __name__ == '__main__':
     main()
