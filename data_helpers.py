@@ -38,6 +38,10 @@ def get_google_translations(text, lang, client, project_parent):
             try_ctr += 1
             sleep(SLEEP_TIME)
     response_text = list(map(lambda x: x.translated_text, response._pb.translations))
+    if(type(response_text) is list and len(response_text) > 0):
+        response_text = response_text[0]
+    elif(type(response_text) is not str):
+        response_text = None
     return response_text
 
 VOWEL_MATCHER = re.compile('^[aeiou].+')
@@ -174,8 +178,12 @@ def load_relationship_occupation_template_data():
             'male' : 'son',
         },
         'it' : {
-            'female' : 'la sua',
-            'male' : 'il suo',
+            'female' : 'sua',
+            'male' : 'suo',
+            ## NOTE: these possessives apply for most nouns
+            ## but not romantic partners!
+            # 'female' : 'la sua',
+            # 'male' : 'il suo',
         },
         'en' : {
             'female' : 'her',
