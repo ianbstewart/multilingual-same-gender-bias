@@ -2,9 +2,11 @@
 Query external APIs for translations.
 """
 import os
+import sys
 from argparse import ArgumentParser
 from data_helpers import load_clean_relationship_sent_data, set_up_google_translate_client, get_google_translations
-
+from tqdm import tqdm
+tqdm.pandas()
 
 def main():
     parser = ArgumentParser()
@@ -21,7 +23,7 @@ def main():
     project_parent, client = set_up_google_translate_client()
 
     ## translate
-    target_lang = 'es'
+    target_lang = 'en'
     translation_sents = relationship_sent_data.loc[:, 'sent'].progress_apply(lambda x: get_google_translations(x, target_lang, client, project_parent))
     relationship_sent_data = relationship_sent_data.assign(**{
         'translation_txt' : translation_sents
@@ -30,7 +32,8 @@ def main():
     ## save
     for relationship_type_i, data_i in relationship_sent_data.groupby('relationship_type'):
         relationship_type_i = relationship_type_i.replace("_", '')
-        out_file_i = os.path.join(out_dir, f'multilingual_occupation_relationship={relationship_type_i}_model=googletranslate_translations.gz')
+        out_file_i = os.path.join(out_dir,
+                                  f'multilingual_occupation_relationship={relationship_type_i}_model=googletranslate_translations_langs={",".join(langs)}.gz')
         data_i.to_csv(out_file_i, sep='\t', compression='gzip', index=False)
 
 if __name__ == '__main__':
