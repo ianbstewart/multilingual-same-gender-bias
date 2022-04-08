@@ -47,7 +47,7 @@ def main():
         #     same_gender_sentence_data.assign(**{'sentence_type' : 'same_gender'}),
         #     diff_gender_sentence_data.assign(**{'sentence_type' : 'diff_gender'}),
         # ], axis=0)
-        ## TODO: join English translations
+        ## join English translations
         en_sentence_data = load_clean_relationship_sent_data(langs=['en'])
         en_sentence_data = en_sentence_data.rename(columns={'sent' : 'sent_en'})
         data_id_cols = ['subject_word_en', 'subject_gender', 'relationship_word_en', 'relationship_topic', 'relationship_type']
@@ -85,7 +85,6 @@ def main():
         dataset_i = dataset_i.add_column('labels', list(map(lambda x: x[:-1], output_data_i['input_ids'])))
         for id_col_j in data_id_cols:
             dataset_i = dataset_i.add_column(id_col_j, data_i.loc[:, id_col_j].values)
-        ## TODO: train/val/test split
         # test_pct = 0.1
         # train_test_data = dataset.train_test_split(test_size=test_pct, seed=123)
         # train_dataset = train_test_data['train']
