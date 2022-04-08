@@ -10,9 +10,9 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
 #SBATCH --account=mihalcea0
-SOURCE_LANG=es
+#SOURCE_LANG=es
 #SOURCE_LANG=fr
-#SOURCE_LANG=it
+SOURCE_LANG=it
 # "standard" data
 #OUT_DIR=data/MT
 #SAMPLE_SIZE=100000
