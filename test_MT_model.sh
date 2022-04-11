@@ -17,7 +17,7 @@ SOURCE_LANG=it
 #TEST_DATA_DIR=data/MT/data_"$SOURCE_LANG"/test_data
 # default data: original model
 MODEL_DIR=finetune_translate_mbart_lang="$SOURCE_LANG"/checkpoint-54000/
-#OUT_DIR=data/MT/data _"$SOURCE_LANG"
+#OUT_DIR=data/MT/data_"$SOURCE_LANG"
 # default data: fine-tuned model
 #MODEL_DIR=finetune_translate_mbart_lang="$SOURCE_LANG"/finetune/checkpoint-1500/
 #OUT_DIR=data/MT/data_"$SOURCE_LANG"/translation_data_type=relationship_finetune/

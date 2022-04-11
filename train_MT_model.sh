@@ -20,9 +20,9 @@ SOURCE_LANG=it
 # custom data
 OUT_DIR=data/MT/translation_data_type=relationship_lang=$SOURCE_LANG/
 DATASET=data/MT/translation_data_type=relationship_lang=$SOURCE_LANG/
-MODEL_TYPE='mbart'
 # pretrained model
 MODEL_DIR=finetune_translate_mbart_lang=$SOURCE_LANG/checkpoint-54000/
+MODEL_TYPE='mbart'
 
 # disable internet
 export TRANSFORMERS_OFFLINE=1
