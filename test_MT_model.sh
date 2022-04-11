@@ -14,17 +14,17 @@
 #SOURCE_LANG=fr
 SOURCE_LANG=it
 # default data: test data
-TEST_DATA_DIR=data/MT/data_"$SOURCE_LANG"/test_data
+#TEST_DATA_DIR=data/MT/data_"$SOURCE_LANG"/test_data
 # default data: original model
 MODEL_DIR=finetune_translate_mbart_lang="$SOURCE_LANG"/checkpoint-54000/
-OUT_DIR=data/MT/data_"$SOURCE_LANG"
+#OUT_DIR=data/MT/data _"$SOURCE_LANG"
 # default data: fine-tuned model
 #MODEL_DIR=finetune_translate_mbart_lang="$SOURCE_LANG"/finetune/checkpoint-1500/
 #OUT_DIR=data/MT/data_"$SOURCE_LANG"/translation_data_type=relationship_finetune/
 # diff/same gender data
+TEST_DATA_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/data_"$SOURCE_LANG"/test_data/
 #OUT_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/
-#OUT_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/finetune/
-#TEST_DATA_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/data_"$SOURCE_LANG"/test_data/
+OUT_DIR=data/MT/translation_data_type=relationship_lang="$SOURCE_LANG"/finetune/
 # offline transformers on server
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
