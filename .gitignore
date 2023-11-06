@@ -5,4 +5,5 @@ config_files/
 .idea/
 finetune_translate*
 MT.zip
-*_classifier/
+*_classifier
+auth/
