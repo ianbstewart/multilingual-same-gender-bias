@@ -11,6 +11,7 @@ import seaborn as sns
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from statsmodels.api import Logit
+from statsmodels.stats.contingency_tables import mcnemar
 
 def plot_subject_vs_relationship_gender_accuracy_per_sub_group(
         data, pronoun_correct_var, relationship_type_var,
@@ -28,8 +29,8 @@ def plot_subject_vs_relationship_gender_accuracy_per_sub_group(
     """
     sub_groups = list(sorted(data.loc[:, sub_group_var].unique()))
     N_sub_groups = len(sub_groups)
-    width = 4
-    height = 3.5
+    width = 3
+    height = 2.5
     f, axs = plt.subplots(
         1, N_sub_groups,
         figsize=(width * N_sub_groups, height),
@@ -264,9 +265,9 @@ def main():
 
     ## load data
 
-    relationship_gender_var = 'relationship_target_gender'
     output_files = args.output_files
     relationship_type_var = 'relationship_type'
+    relationship_gender_var = 'relationship_target_gender'
     data = load_clean_data(output_files)
 
     ## compute aggregate/per-sub-group accuracy
@@ -307,11 +308,9 @@ def main():
     plt.savefig(aggregate_fig_file)
     ## per-model
     sub_group_vars = [
-        'subject_gender', 'model', 'lang', 'subject_word_en'
+        'subject_gender', 'model', 'lang',
     ]
     for sub_group_var in sub_group_vars:
-        sub_group_vals = data.loc[:, sub_group_var].unique()
-        plt.figure(figsize=(width*len(sub_group_vals), height))
         plot_subject_vs_relationship_gender_accuracy_per_sub_group(
             data, pronoun_correct_var,
             relationship_type_var,
@@ -321,7 +320,36 @@ def main():
             args.output_dir, f'per_{sub_group_var}_accuracy.png'
         )
         plt.savefig(per_sub_group_file)
-    ## interaction effects??
+    ## plot top-K subject words
+    subject_type_var = 'subject_word_en'
+    top_k_subject_type = 3
+    ## get % diff between diff_gender - same_gender
+    acc_per_subject_type = data.groupby(subject_type_var).apply(
+        lambda x: x[x.loc[:, relationship_type_var]=='Different-gender'].loc[:, pronoun_correct_var].mean() -
+                  x[x.loc[:, relationship_type_var]=='Same-gender'].loc[:, pronoun_correct_var].mean()
+    ).sort_values(ascending=False)
+    top_k_subject_types = acc_per_subject_type.iloc[:top_k_subject_type].index.tolist()
+    low_k_subject_types = acc_per_subject_type.iloc[-top_k_subject_type:].index.tolist()
+    top_k_subject_data = data[data.loc[:, subject_type_var].isin(top_k_subject_types)]
+    low_k_subject_data = data[data.loc[:, subject_type_var].isin(low_k_subject_types)]
+    plot_subject_vs_relationship_gender_accuracy_per_sub_group(
+        top_k_subject_data, pronoun_correct_var,
+        relationship_type_var, subject_type_var
+    )
+    per_sub_group_file = os.path.join(
+        args.output_dir, f'per_{subject_type_var}_accuracy_top_K={top_k_subject_type}.png'
+    )
+    plt.savefig(per_sub_group_file)
+    plot_subject_vs_relationship_gender_accuracy_per_sub_group(
+        low_k_subject_data, pronoun_correct_var,
+        relationship_type_var, subject_type_var
+    )
+    per_sub_group_file = os.path.join(
+        args.output_dir, f'per_{subject_type_var}_accuracy_low_K={top_k_subject_type}.png'
+    )
+    plt.savefig(per_sub_group_file)
+
+    ## plot interaction effects??
     ## lang x subject word
     for lang, data_per_lang in data.groupby('lang'):
         sub_group_var = 'subject_word_en'
@@ -333,6 +361,38 @@ def main():
             args.output_dir, f'per_{sub_group_var}_accuracy_lang={lang}.png'
         )
         plt.savefig(per_sub_group_file)
+
+    ## stat tests
+    ## significant differences (same-gender vs. diff-gender)
+    test_stat_df = []
+    ## aggregate
+    count_table = data.loc[:, [relationship_type_var, pronoun_correct_var]].value_counts().sort_index()
+    count_table_vals = count_table.values.reshape(2, 2)
+    test_results = mcnemar(count_table_vals)
+    test_stat_df.append([data.shape[0], test_results.statistic, test_results.pvalue, 'aggregate', 'aggregate'])
+    ## sub types
+    sub_type_vars = [
+        'subject_gender',
+        'model',
+        'lang',
+        'subject_word_en',
+    ]
+    relationship_type_vals = data.loc[:, relationship_type_var].unique()
+    pronoun_correct_vals = data.loc[:, pronoun_correct_var].unique()
+    for sub_type_var in sub_type_vars:
+        for sub_type_val, sub_type_data in data.groupby(sub_type_var):
+            count_table = sub_type_data.loc[:, [relationship_type_var, pronoun_correct_var]].value_counts().sort_index()
+            ## fill missing keys
+            for relationship_type_val in relationship_type_vals:
+                for pronoun_correct_val in pronoun_correct_vals:
+                    if ((relationship_type_val, pronoun_correct_val) not in count_table.index):
+                        count_table.loc[(relationship_type_val, pronoun_correct_val)] = 0.
+            count_table_vals = count_table.values.reshape(2, 2)
+            test_results = mcnemar(count_table_vals)
+            test_stat_df.append(
+                [sub_type_data.shape[0], test_results.statistic, test_results.pvalue, sub_type_var, sub_type_val])
+    test_stat_df = pd.DataFrame(test_stat_df, columns=['N', 'stat', 'p', 'var', 'val'])
+    test_stat_df.to_csv('data/output/diff_tests.csv', index=False)
 
     ## regression
     ## dependent var = translation correct (only same-gender data)
@@ -346,8 +406,6 @@ def main():
     ## accuracy_var ~ subject_gender + lang_var + relationship_target + relationship_action + occupation_income + occupation_female_representation + occupation_age
     ## get occupation data
     occupation_metadata = clean_occupation_metadata()
-    # tmp debug
-    print(f'occupation metadata cols = {occupation_metadata.columns}')
     occupation_metadata.rename(columns={'occupation' : 'subject_word_en'}, inplace=True)
     ## merge everything lol
     data = pd.merge(
