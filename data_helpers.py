@@ -13,15 +13,6 @@ import seaborn as sns
 from time import sleep
 from google.cloud import translate
 
-def set_up_google_translate_client():
-    environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'data/google_auth_key.json'
-    environ['PROJECT_ID'] = 'arcane-rigging-115120'
-    environ.get('PROJECT_ID')
-    project_id = environ['PROJECT_ID']
-    parent = f'projects/{project_id}'
-    client = translate.TranslationServiceClient()
-    return parent, client
-
 def get_google_translations(text, lang, client, project_parent):
     translate_success = False
     try_ctr = 0

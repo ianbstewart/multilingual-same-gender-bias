@@ -11,7 +11,7 @@ I. Stewart, R. Mihalcea. "Whose wife is it anyway? Assessing bias against same-g
     - [Amazon](https://docs.aws.amazon.com/polly/latest/dg/prerequisites.html)
     - [Google](https://cloud.google.com/translate/docs/authentication)
     - [Microsoft](https://learn.microsoft.com/en-us/answers/questions/1192881/how-to-get-microsoft-translator-api-key)
-- Save authentication data in JSON format under "auth/"
+- Save authentication data in JSON format under "auth/".
     - E.g. "auth/google.json"
 - Run translation queries.
     - `python google --langs es fr it --output_dir data/output/`
@@ -28,10 +28,10 @@ I. Stewart, R. Mihalcea. "Whose wife is it anyway? Assessing bias against same-g
 
 ## Next steps
 
-- Verification of translation results
-    - Try less ambiguous source nouns set, e.g. "the gay man married his boyfriend"
-    - Try more context clues, e.g. "the man married his boyfriend, who is also a father"
-    - Test open-source MT systems like [Libre Translate](https://libretranslate.com/), [M2M translation](https://huggingface.co/facebook/m2m100_418M).
+- Verify translation results
+    - Use less ambiguous source nouns, e.g. "the gay man married his boyfriend"
+    - Add context clues, e.g. "the man married his boyfriend, who is also a father"
+    - Test open-source MT systems: [Libre Translate](https://libretranslate.com/), [M2M translation](https://huggingface.co/facebook/m2m100_418M).
 - Test other systems
     - Coreference resolution in example sentences e.g. "Juan y Carla hablan sobre **su** novia" => can also frame as translation.
     - Contextual prediction e.g. using sentence "Juan se casó con su ____ quien es alto" => P("esposo") vs. P("esposa")
