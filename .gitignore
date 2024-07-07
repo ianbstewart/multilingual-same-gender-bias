@@ -3,7 +3,3 @@ __pycache__/
 .ipynb_checkpoints/
 config_files/
 .idea/
-finetune_translate*
-MT.zip
-*_classifier
-auth/

@@ -1,0 +1,5 @@
+{
+    "subscription_key" : "DUMMY",
+    "region" : "westus3",
+    "endpoint" : "https://api.cognitive.microsofttranslator.com/" 
+}

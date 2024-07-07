@@ -1,0 +1,13 @@
+{
+  "type": "DUMMY",
+  "project_id": "DUMMY",
+  "private_key_id": "DUMMY",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nDUMMY-----END PRIVATE KEY-----\n",
+  "client_email": "DUMMY",
+  "client_id": "DUMMY",
+  "auth_uri": "DUMMY",
+  "token_uri": "DUMMY",
+  "auth_provider_x509_cert_url": "DUMMY",
+  "client_x509_cert_url": "DUMMY",
+  "universe_domain": "DUMMY"
+}
