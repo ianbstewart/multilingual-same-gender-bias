@@ -1,0 +1,51 @@
+occupation	categories_BOLS	category_DOL	income	women_pct	age
+analyst	['Management analysts', 'Budget analysts', 'Credit analysts', 'Financial and investment analysts', 'Computer systems analysts', 'Information security analysts', 'Software quality assurance analysts and testers', 'Software quality assurance analysts and testers']	Budget analysts;Computer systems analysts;Credit analysts;Financial and investment analysts;Information security analysts;Management analysts;Market research analysts and marketing specialists;News analysts, reporters, and journalists;Operations research analysts;Software quality assurance analysts and testers	8.477608707173722e+04	41.08930658927752	
+artist	['Artists and related workers']	Artists and related workers	49032.0	38.2	43.3
+athlete	['Athletes and sports competitors']				
+author	['Writers and authors']	Writers and authors	61189.0	55.5	44.8
+baker	['Bakers']	Bakers	29241.0	57.4	41.7
+banker	['Financial managers', 'Business and financial operations occupations', 'Financial and investment analysts', 'Personal financial advisors', 'Financial examiners', 'Other financial specialists', 'Financial clerks, all other']	Financial and investment analysts;Financial clerks, all other;Financial examiners;Financial managers	83173.79255606733	49.671444819543886	
+barber	['Barbers']	Barbers	29283.0	21.2	40.8
+boss	['General and operations managers', 'Advertising and promotions managers', 'Marketing managers', 'Sales managers', 'Public relations and fundraising managers', 'Administrative services managers', 'Facilities managers', 'Computer and information systems managers', 'Financial managers', 'Compensation and benefits managers', 'Human resources managers', 'Training and development managers', 'Industrial production managers', 'Purchasing managers', 'Transportation, storage, and distribution managers', 'Construction managers', 'Education and childcare administrators', 'Architectural and engineering managers', 'Food service managers', 'Funeral home managers', 'Entertainment and recreation managers', 'Lodging managers', 'Medical and health services managers', 'Natural sciences managers', 'Postmasters and mail superintendents', 'Property, real estate, and community association managers', 'Social and community service managers', 'Emergency management directors', 'Personal service managers, all other', 'Managers, all other', '']	Computer and information systems managers;Construction managers;Entertainment and recreation managers;Facilities managers;Financial managers;Food service managers;General and operations managers;Human resources managers;Industrial production managers;Lodging managers;Managers, all other;Marketing managers;Medical and health services managers;Natural sciences managers;Public relations and fundraising managers;Purchasing managers;Sales managers;Social and community service managers;Training and development managers;Transportation, storage, and distribution managers	77496.28234500348	42.426513466174214	
+carpenter	['Carpenters']	Carpenters	40759.0	1.9	40.8
+coach	['Coaches and scouts']	Coaches and scouts	47895.0	31.600000000000005	34.6
+consultant	[]				
+cop	['Police officers']	Police officers	67927.0	14.799999999999999	40.5
+counselor	['Credit counselors and loan officers', ' Substance abuse and behavioral disorder counselors', ' Educational, guidance, and career counselors and advisors', 'Mental health counselors', 'Rehabilitation counselors', 'Counselors, all other']	Substance abuse and behavioral disorder counselors;Counselors, all other;Credit counselors and loan officers;Educational, guidance, and career counselors and advisors;Mental health counselors;Rehabilitation counselors	54881.944507508895	61.34484461704188	
+custodian	['Building and grounds cleaning and maintenance occupations']	Janitors and building cleaners			46.4
+dancer	['Dancers and choreographers']				
+dentist	['Dentists']	Dentists	152233.0	32.0	46.6
+director	['Producers and directors', 'Music directors and composers', 'Emergency management directors', 'Directors, religious activities and education']	Directors, religious activities and education;Producers and directors	65661.55413526414	43.53799155443133	
+doctor	['Emergency medicine physicians', ' Other physicians']				
+editor	['Editors']	Editors	62494.0	53.9	45.4
+electrician	['Electricians']	Electricians	52959.0	1.8	41.4
+engineer	['Aerospace engineers', 'Agricultural engineers', 'Bioengineers and biomedical engineers', 'Chemical engineers', 'Civil engineers', 'Computer hardware engineers', 'Electrical and electronics engineers', 'Environmental engineers', 'Industrial engineers, including health and safety', 'Marine engineers and naval architects', 'Materials engineers', 'Mechanical engineers', 'Mining and geological engineers, including mining safety engineers', 'Nuclear engineers', 'Petroleum engineers', 'Engineers, all other\n']	Aerospace engineers;Chemical engineers;Civil engineers;Electrical and electronics engineers;Engineers, all other;Environmental engineers;Industrial engineers, including health and safety;Materials engineers;Mechanical engineers	93762.54581191952	13.487693010089291	
+entertainer	['Entertainers and performers, sports and related workers, all other']	Other entertainment attendants and related workers			23.8
+entrepreneur	[]				
+farmer	['Farmers, ranchers, and other agricultural managers']	Farmers, ranchers, and other agricultural managers	42498.0	12.1	56.0
+firefighter	['Firefighters']	Firefighters	71600.0	3.5	39.7
+journalist	['News analysts, reporters, and journalists']	News analysts, reporters, and journalists	61427.0	46.3	34.9
+judge	['Judges, magistrates, and other judicial workers']	Judges, magistrates, and other judicial workers	105383.0	49.3	53.1
+laborer	['Construction laborers', 'Laborers and freight, stock, and material movers, hand']	Laborers and freight, stock, and material movers, hand	33849.89293188793	11.787692110825894	35.0
+landlord	['Property, real estate, and community association managers']	Property, real estate, and community association managers	56061.0	52.4	48.7
+lawyer	['Lawyers']	Lawyers	131501.0	37.5	46.5
+librarian	['Librarians and media collections specialists']	Librarians and media collections specialists	54259.0	81.8	49.9
+mechanic	['Automotive service technicians and mechanics', 'Bus and truck mechanics and diesel engine specialists', 'Heavy vehicle and mobile equipment service technicians and mechanics', 'Small engine mechanics', 'Miscellaneous vehicle and mobile equipment mechanics, installers, and repairers']	Aircraft mechanics and service technicians;Automotive service technicians and mechanics;Industrial and refractory machinery mechanics	40814.0	2.0	
+nanny	['Childcare workers']	Childcare workers	23064.0	94.7	37.7
+nurse	['Registered nurses']	Registered nurses	69754.0	86.7	43.1
+painter	['Painters and paperhangers']	Painters and paperhangers	33965.0	7.4	41.5
+pharmacist	['Pharmacists']	Pharmacists	122473.0	54.6	41.4
+photographer	['Photographers']	Photographers	44026.0	41.0	39.6
+plumber	['Plumbers, pipefitters, and steamfitters']	Plumbers, pipefitters, and steamfitters	50451.0	1.4	40.6
+president	[]				
+professor	['Postsecondary teachers']	Postsecondary teachers	72172.0	47.6	49.4
+psychologist	['Clinical and counseling psychologists', 'School psychologists', 'Other psychologists']	Other psychologists	85411.0	68.3	48.6
+realtor	['Real estate brokers and sales agents']	Real estate brokers and sales agents	61192.0	51.5	49.1
+scientist	['Life, physical, and social science occupations', 'Agricultural and food scientists', 'Biological scientists', 'Conservation scientists and foresters', 'Medical scientists', 'Life scientists, all other', 'Astronomers and physicists', 'Atmospheric and space scientists', 'Chemists and materials scientists', 'Environmental scientists and specialists, including health', 'Geoscientists and hydrologists, except geographers', 'Physical scientists, all other', 'Economists']	Agricultural and food scientists;Biological scientists;Chemists and materials scientists;Computer and information research scientists;Conservation scientists and foresters;Environmental scientists and specialists, including health;Geoscientists and hydrologists, except geographers;Medical scientists;Miscellaneous social scientists and related workers;Physical scientists, all other	80334.66315820505	43.84408196267966	
+secretary	['Executive secretaries and executive administrative assistants', 'Legal secretaries and administrative assistants', 'Medical secretaries and administrative assistants', 'Secretaries and administrative assistants, except legal, medical, and executive']	Secretaries and administrative assistants, except legal, medical, and executive	42282.22501357786	94.00411125004739	48.5
+senator	[]				
+singer	['Musicians and singers']	Musicians and singers	42121.0	20.9	44.2
+student	[]				
+surgeon	['Surgeons']				
+teacher	['Preschool and kindergarten teachers', 'Elementary and middle school teachers', 'Secondary school teachers', 'Special education teachers', 'Tutors', 'Other teachers and instructors']	Preschool and kindergarten teachers;Secondary school teachers;Special education teachers;Elementary and middle school teachers;Other teachers and instructors	50140.82377230932	75.26042387114732	
+writer	['Technical writers', 'Writers and authors']	Writers and authors;Technical writers	65266.7642584292	55.69425853960123	
